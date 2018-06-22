@@ -29,6 +29,10 @@ public class DeviceDetector {
                     "{'company':'Skype', 'purpose':'communication', 'data_type':'video'}")));
             devices.add(new Device(new JSONObject(
                     "{'company':'Apple', 'purpose':'security', 'data_type':'location'}")));
+            devices.add(new Device(new JSONObject(
+                    "{'company':'Phishing4Less', 'purpose':'advertising', 'data_type':'video'}")));
+            devices.add(new Device(new JSONObject(
+                    "{'company':'CMU', 'purpose':'research', 'data_type':'activity'}")));
         } catch(JSONException e){
             Log.e("refreshDevices JSON err", e.getMessage());
 

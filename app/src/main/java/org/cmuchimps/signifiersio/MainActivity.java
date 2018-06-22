@@ -6,6 +6,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.View;
 import android.widget.ImageView;
 import android.widget.TableLayout;
 import android.widget.TableRow;
@@ -35,18 +36,14 @@ public class MainActivity extends AppCompatActivity {
 
             ConstraintLayout icon = (ConstraintLayout) inflater.inflate(R.layout.data_type_icon, null);
             ((ImageView)icon.findViewById(R.id.icon_img)).setImageResource(Device.DataTypeToIcon(d));
-            icon.setMinWidth(100);
-            icon.setMinHeight(100);
+            //icon.findViewById(R.id.alert).setVisibility(View.INVISIBLE);
 
             row.addView(icon);
 
             tableIndex++;
         }
 
-        //LinearLayout test = findViewById(R.id.testLayout);
         Log.d("number of devices",""+dd.devices.size());
 
-
-//            //ViewGroup.LayoutParams ps = icon.getLayoutParams();
     }
 }

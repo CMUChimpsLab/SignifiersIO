@@ -61,6 +61,14 @@ public class Device {
         switch(d){
             case VIDEO:
                 return R.drawable.camera;
+            case AUDIO:
+                return R.drawable.mic;
+            case LOCATION:
+                return R.drawable.map;
+            case ACTIVITY:
+                return R.drawable.wave;
+            case EMI:
+                return R.drawable.magnet;
             default:
                 return R.drawable.ic_launcher_background;
         }

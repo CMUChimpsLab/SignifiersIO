@@ -11,7 +11,7 @@
         android:id="@+id/icon_table"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:stretchColumns="*"> <!-- Evenly space columns -->
+        android:stretchColumns="*"> <!-- Space columns evenly -->
 
     </TableLayout>
 
