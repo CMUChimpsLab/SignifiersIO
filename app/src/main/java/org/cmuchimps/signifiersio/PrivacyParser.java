@@ -1,5 +1,7 @@
 package org.cmuchimps.signifiersio;
 
+import android.util.Log;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -35,8 +37,16 @@ public class PrivacyParser {
             "}";
 
     // TODO: loads privacy preferences from <unclear>
-    public static JSONObject loadPP() throws JSONException {
-        return new JSONObject(ex_pp);
+    public static JSONObject loadPP() {
+        JSONObject pp;
+        try{
+            pp = new JSONObject(ex_pp);
+        } catch(JSONException e){
+            Log.e("Error loading PP", e.getMessage());
+            pp = new JSONObject();
+        }
+        assert(isValid(pp));
+        return pp;
     }
 
     // Return the opposite rule_type
@@ -88,27 +98,29 @@ public class PrivacyParser {
     // Checks whether the privacy preference is valid
     // If pedantic is true, disallows extraneous properties and
     //   empty rule objects and except lists
-    public static boolean isValid(JSONObject pp, boolean pedantic)
-            throws JSONException {
-
-        // rule_type is required for top-level
-        if (!pp.has("rule_type") || !(pp.getString("rule_type").equals("allow") ||
-                pp.getString("rule_type").equals("disallow"))) {
-            return false;
-        }
-
-        // Check for extraneous keys
-        if (pedantic) {
-            if (pp.length() > (pp.has("except") ? 2 : 1)) {
+    public static boolean isValid(JSONObject pp, boolean pedantic) {
+        try {
+            // rule_type is required for top-level
+            if (!pp.has("rule_type") || !(pp.getString("rule_type").equals("allow") ||
+                    pp.getString("rule_type").equals("disallow"))) {
                 return false;
             }
-        }
 
-        return ruleValid(pp, pp.getString("rule_type"), pedantic);
+            // Check for extraneous keys
+            if (pedantic) {
+                if (pp.length() > (pp.has("except") ? 2 : 1)) {
+                    return false;
+                }
+            }
+
+            return ruleValid(pp, pp.getString("rule_type"), pedantic);
+        } catch(JSONException e){
+            Log.e("isValid invalid JSON", e.getMessage());
+            return false;
+        }
     }
 
-    public static boolean isValid(JSONObject pp)
-            throws JSONException {
+    public static boolean isValid(JSONObject pp) {
         return isValid(pp, false);
     }
 
@@ -145,21 +157,27 @@ public class PrivacyParser {
     }
 
     // Returns true if device is allowed by pp and false if device violates pp
-    public static boolean match(JSONObject pp, Device device)
-            throws JSONException {
+    public static boolean allows(JSONObject pp, Device device) {
+        try {
+            // Whether device is allowed by pp
+            boolean allowed = pp.getString("rule_type").equals("allow");
 
-        // Whether device is allowed by pp
-        boolean allowed = pp.getString("rule_type").equals("allow");
-
-        // If device matches any exception, negate matches
-        JSONArray es = pp.getJSONArray("except");
-        for (int i = 0; i < es.length(); i++) {
-            JSONObject e = es.getJSONObject(i);
-            if (ruleMatch(e, device)) {
-                return !allowed;
+            // If device matches any exception, negate matches
+            if (pp.has("except")) {
+                JSONArray es = pp.getJSONArray("except");
+                for (int i = 0; i < es.length(); i++) {
+                    JSONObject e = es.getJSONObject(i);
+                    if (ruleMatch(e, device)) {
+                        return !allowed;
+                    }
+                }
             }
+
+            return allowed;
+        } catch(JSONException e){
+            Log.e("allows JSON error", e.getMessage());
+            return false;
         }
-        
-        return allowed;
+
     }
 }
