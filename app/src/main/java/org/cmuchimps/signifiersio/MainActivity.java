@@ -19,10 +19,11 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 public class MainActivity extends AppCompatActivity {
-    private static final int ICONS_PER_ROW = 3;
-    private static final int REFRESH_TIME = 1000;
-    DeviceDetector deviceDetector = new DeviceDetector();
+    private static final int ICONS_PER_ROW = 3;   // Number of icons in each row of the UI
+    private static final int REFRESH_TIME = 1000; // ms between updating the device list
+
     JSONObject privacyPolicy = PrivacyParser.loadPP();
+    DeviceDetector deviceDetector = new DeviceDetector();
     private Timer refreshTimer;
 
     @Override
@@ -90,6 +91,9 @@ public class MainActivity extends AppCompatActivity {
                     break;
                 }
             }
+
+            // Create the click listener that will pop up a device list
+            icon.setOnClickListener(new DeviceList(findViewById(R.id.root_view),dt,hierarchy.get(dt)));
 
             row.addView(icon);
             tableIndex++;
