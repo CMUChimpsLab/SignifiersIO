@@ -46,6 +46,39 @@ public class Device {
         return this.properties.get(k);
     }
 
+    // Creates short, one-line description of device
+    public String toString(){
+        StringBuilder res = new StringBuilder();
+        boolean first = true;
+        String[] props = {"company","device_name","purpose"};
+
+        for(String property : props){
+            if(this.hasProperty(property)) {
+                res.append(first ? "" : ", ").append(this.getProperty(property));
+            }
+            first = false;
+        }
+
+        return res.toString();
+    }
+
+    // Creates multiline string describing all properties of this device
+    // TODO: sort, make keys friendly (ie not "data_type")
+    public String propsToString(){
+        StringBuilder res = new StringBuilder();
+        boolean first = true;
+
+        for(String key : this.properties.keySet()){
+            res.append(first ? "" : "\n")
+                    .append(key).append(": ")
+                    .append(this.getProperty(key));
+
+            first = false;
+        }
+
+        return res.toString();
+    }
+
     public static DataType stringToDataType(String s){
         switch(s){
             case "video": return DataType.VIDEO;

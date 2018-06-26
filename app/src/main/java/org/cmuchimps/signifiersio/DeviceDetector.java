@@ -30,7 +30,7 @@ public class DeviceDetector {
         try{
             if(time % 3 != 0)
             devices.add(new Device(new JSONObject(
-                    "{'company':'Google', 'purpose':'advertising', 'data_type':'audio'}")));
+                    "{'company':'Google', 'purpose':'advertising', 'data_type':'audio', 'device_name':'Google Home'}")));
             devices.add(new Device(new JSONObject(
                     "{'company':'Skype', 'purpose':'communication', 'data_type':'video'}")));
             devices.add(new Device(new JSONObject(
