@@ -1,3 +1,7 @@
 <resources>
     <string name="app_name">SignifiersIO</string>
+    <string-array name="privacy_root_dropdown">
+        <item>Allow all except...</item>
+        <item>Disallow all except...</item>
+    </string-array>
 </resources>

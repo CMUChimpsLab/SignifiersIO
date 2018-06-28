@@ -9,10 +9,18 @@
     tools:context=".MainActivity">
 
     <TableLayout
-        android:id="@+id/icon_table"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:stretchColumns="*"> <!-- Space columns evenly -->
-    </TableLayout>
+            android:id="@+id/icon_table"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:stretchColumns="*"> <!-- Space columns evenly -->
+        </TableLayout>
+
+    <include
+        android:id="@+id/prefs_page"
+        layout="@layout/privacy_preferences"
+        android:visibility="gone"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="parent" />
 
 </android.support.constraint.ConstraintLayout>

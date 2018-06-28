@@ -6,7 +6,10 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewTreeObserver;
 import android.widget.ImageView;
 import android.widget.TableLayout;
 import android.widget.TableRow;
@@ -26,12 +29,24 @@ public class MainActivity extends AppCompatActivity {
     DeviceDetector deviceDetector = new DeviceDetector();
     private Timer refreshTimer;
 
+    private Menu menu;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
         deviceDetector = new DeviceDetector();
+
+        // Offset the preferences pane downwards
+        final View rootView = this.findViewById(R.id.root_view);
+        rootView.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
+            @Override
+            public void onGlobalLayout() {
+                findViewById(R.id.prefs_page).setY(rootView.getHeight());
+                rootView.getViewTreeObserver().removeOnGlobalLayoutListener(this);
+            }
+        });
     }
 
     @Override
@@ -99,6 +114,57 @@ public class MainActivity extends AppCompatActivity {
             tableIndex++;
         }
 
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        this.menu = menu;
+        getMenuInflater().inflate(R.menu.menu, menu);
+        menu.findItem(R.id.done).setVisible(false);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item){
+        final View prefsPage = findViewById(R.id.prefs_page);
+
+        switch(item.getItemId()){
+            case R.id.edit:
+                // Slide up preferences pane
+                prefsPage.setVisibility(View.VISIBLE);
+                prefsPage.animate().translationY(0).withEndAction(new Runnable() {
+                    @Override
+                    public void run() {
+                        // Hide main view so you can't click on the icons
+                        findViewById(R.id.icon_table).setVisibility(View.GONE);
+                    }
+                });
+
+                // Change the action bar icon to Done
+                menu.findItem(R.id.edit).setVisible(false);
+                menu.findItem(R.id.done).setVisible(true);
+                return true;
+            case R.id.done:
+                // TODO: Save
+                // Show main view again
+                findViewById(R.id.icon_table).setVisibility(View.VISIBLE);
+
+                // Slide down preferences pane
+                prefsPage.setVisibility(View.VISIBLE);
+                prefsPage.animate().translationY(prefsPage.getHeight()).withEndAction(new Runnable() {
+                    @Override
+                    public void run() {
+                        prefsPage.setVisibility(View.GONE);
+                    }
+                });
+
+                // Change the action bar icon to Edit
+                menu.findItem(R.id.edit).setVisible(true);
+                menu.findItem(R.id.done).setVisible(false);
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
     }
 
 }

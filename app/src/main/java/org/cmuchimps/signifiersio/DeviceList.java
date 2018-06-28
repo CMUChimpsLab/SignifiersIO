@@ -56,13 +56,14 @@ public class DeviceList implements View.OnClickListener{
             }
         });
 
-        // Make the back button scroll left
+        // Make the back arrow scroll left
         popupView.findViewById(R.id.back_button).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 pageScroll.smoothScrollTo(0, 0);
             }
         });
+        // TODO: make the system back button work
 
         // Set the icon and text of the popup
         ImageView icon = popupView.findViewById(R.id.icon_img);
