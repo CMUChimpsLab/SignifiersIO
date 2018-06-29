@@ -23,18 +23,16 @@ import java.util.TimerTask;
 
 public class MainActivity extends AppCompatActivity {
     private static final int ICONS_PER_ROW = 3;   // Number of icons in each row of the UI
-    private static final int REFRESH_TIME = 1000; // ms between updating the device list
+    private static final int REFRESH_TIME = 10000; // ms between updating the device list
 
-    JSONObject privacyPolicy = PrivacyParser.loadPP();
-    DeviceDetector deviceDetector = new DeviceDetector();
+    private JSONObject privacyPolicy = PrivacyParser.loadPP();
+    private final DeviceDetector deviceDetector = new DeviceDetector(this);
     private Timer refreshTimer;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
-        deviceDetector = new DeviceDetector();
 
         // Offset the preferences pane downwards
         final View rootView = this.findViewById(R.id.root_view);

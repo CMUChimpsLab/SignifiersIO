@@ -51,9 +51,9 @@ public class PrivacyParser {
 
     // Return the opposite rule_type
     private static String flip(String rule_type) throws JSONException {
-        if (rule_type.equals("allow")) {
+        if (rule_type.equalsIgnoreCase("allow")) {
             return "disallow";
-        } else if (rule_type.equals("disallow")) {
+        } else if (rule_type.equalsIgnoreCase("disallow")) {
             return "allow";
         } else {
             throw new JSONException("Bad rule_type");
@@ -65,7 +65,7 @@ public class PrivacyParser {
             throws JSONException {
 
         // If present, rule_type must match expectation
-        if (rule.has("rule_type") && !rule.getString("rule_type").equals(rule_type)) {
+        if (rule.has("rule_type") && !rule.getString("rule_type").equalsIgnoreCase(rule_type)) {
             return false;
         }
 
@@ -101,8 +101,8 @@ public class PrivacyParser {
     public static boolean isValid(JSONObject pp, boolean pedantic) {
         try {
             // rule_type is required for top-level
-            if (!pp.has("rule_type") || !(pp.getString("rule_type").equals("allow") ||
-                    pp.getString("rule_type").equals("disallow"))) {
+            if (!pp.has("rule_type") || !(pp.getString("rule_type").equalsIgnoreCase("allow") ||
+                    pp.getString("rule_type").equalsIgnoreCase("disallow"))) {
                 return false;
             }
 
@@ -132,13 +132,13 @@ public class PrivacyParser {
         while (keys.hasNext()) {
             String k = keys.next();
 
-            if (k.equals("rule_type") || k.equals("except")) {
+            if (k.equalsIgnoreCase("rule_type") || k.equalsIgnoreCase("except")) {
                 continue;
             }
 
             // If device doesn't have property k or it doesn't match,
             // device doesn't match rule
-            if (!device.hasProperty(k) || !device.getProperty(k).equals(rule.getString(k))) {
+            if (!device.hasProperty(k) || !device.getProperty(k).equalsIgnoreCase(rule.getString(k))) {
                 return false;
             }
         }
@@ -160,7 +160,7 @@ public class PrivacyParser {
     public static boolean allows(JSONObject pp, Device device) {
         try {
             // Whether device is allowed by pp
-            boolean allowed = pp.getString("rule_type").equals("allow");
+            boolean allowed = pp.getString("rule_type").equalsIgnoreCase("allow");
 
             // If device matches any exception, negate matches
             if (pp.has("except")) {

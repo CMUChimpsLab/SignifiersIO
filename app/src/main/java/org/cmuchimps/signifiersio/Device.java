@@ -1,5 +1,7 @@
 package org.cmuchimps.signifiersio;
 
+import android.util.Log;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -30,12 +32,16 @@ public class Device {
             String k = keys.next();
 
             // Assign dataType
-            if(k.equals("data_type")){
+            if(k.equalsIgnoreCase("data_type")){
                 this.dataType = stringToDataType(o.getString(k));
             }
 
             // dataType is also in properties
             properties.put(k, o.getString(k));
+        }
+
+        if(this.dataType == null){
+            throw new JSONException("Device JSON has no data_type property");
         }
     }
 
@@ -80,7 +86,7 @@ public class Device {
     }
 
     public static DataType stringToDataType(String s){
-        switch(s){
+        switch(s.toLowerCase()){
             case "video": return DataType.VIDEO;
             case "audio": return DataType.AUDIO;
             case "location": return DataType.LOCATION;
