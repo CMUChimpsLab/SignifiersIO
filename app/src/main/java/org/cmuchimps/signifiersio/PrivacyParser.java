@@ -10,6 +10,7 @@ import java.util.Iterator;
 
 public class PrivacyParser {
     // TODO: handle multiple purposes/data_types
+    private static JSONObject policy;
 
     private static final String ex_pp = "{" +
             "'rule_type': 'allow'," +
@@ -37,16 +38,14 @@ public class PrivacyParser {
             "}";
 
     // TODO: loads privacy preferences from <unclear>
-    public static JSONObject loadPP() {
-        JSONObject pp;
+    public static void loadPP() {
         try{
-            pp = new JSONObject(ex_pp);
+            policy = new JSONObject(ex_pp);
         } catch(JSONException e){
-            Log.e("Error loading PP", e.getMessage());
-            pp = new JSONObject();
+            Log.e("Error loading PP", e.toString());
         }
-        assert(isValid(pp));
-        return pp;
+
+        assert(isValid(policy));
     }
 
     // Return the opposite rule_type
@@ -98,7 +97,7 @@ public class PrivacyParser {
     // Checks whether the privacy preference is valid
     // If pedantic is true, disallows extraneous properties and
     //   empty rule objects and except lists
-    public static boolean isValid(JSONObject pp, boolean pedantic) {
+    private static boolean isValid(JSONObject pp, boolean pedantic) {
         try {
             // rule_type is required for top-level
             if (!pp.has("rule_type") || !(pp.getString("rule_type").equalsIgnoreCase("allow") ||
@@ -115,12 +114,12 @@ public class PrivacyParser {
 
             return ruleValid(pp, pp.getString("rule_type"), pedantic);
         } catch(JSONException e){
-            Log.e("isValid invalid JSON", e.getMessage());
+            Log.e("isValid invalid JSON", e.toString());
             return false;
         }
     }
 
-    public static boolean isValid(JSONObject pp) {
+    private static boolean isValid(JSONObject pp) {
         return isValid(pp, false);
     }
 
@@ -156,15 +155,15 @@ public class PrivacyParser {
         return true;
     }
 
-    // Returns true if device is allowed by pp and false if device violates pp
-    public static boolean allows(JSONObject pp, Device device) {
+    // Returns true if device is allowed by policy and false if device violates policy
+    public static boolean allows(Device device) {
         try {
-            // Whether device is allowed by pp
-            boolean allowed = pp.getString("rule_type").equalsIgnoreCase("allow");
+            // Whether device is allowed by policy
+            boolean allowed = policy.getString("rule_type").equalsIgnoreCase("allow");
 
             // If device matches any exception, negate matches
-            if (pp.has("except")) {
-                JSONArray es = pp.getJSONArray("except");
+            if (policy.has("except")) {
+                JSONArray es = policy.getJSONArray("except");
                 for (int i = 0; i < es.length(); i++) {
                     JSONObject e = es.getJSONObject(i);
                     if (ruleMatch(e, device)) {
@@ -174,8 +173,9 @@ public class PrivacyParser {
             }
 
             return allowed;
+
         } catch(JSONException e){
-            Log.e("allows JSON error", e.getMessage());
+            Log.e("allows JSON error", e.toString());
             return false;
         }
 

@@ -22,6 +22,7 @@ enum DataType {
 public class Device {
     public DataType dataType;
     public Map<String, String> properties;
+    public final boolean violation; // Whether this device violates the user's privacy policy
 
     public Device(JSONObject o) throws JSONException{
         properties = new HashMap<>();
@@ -43,6 +44,8 @@ public class Device {
         if(this.dataType == null){
             throw new JSONException("Device JSON has no data_type property");
         }
+
+        this.violation = !PrivacyParser.allows(this);
     }
 
     public boolean hasProperty(String k){

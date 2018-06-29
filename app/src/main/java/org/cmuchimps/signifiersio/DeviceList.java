@@ -75,8 +75,16 @@ public class DeviceList implements View.OnClickListener{
         LinearLayout deviceList = popupView.findViewById(R.id.device_list);
         for(final Device d : deviceSet){
             View row = inflater.inflate(R.layout.device_blurb, null);
+
+            // Show device details
             TextView rowText = row.findViewById(R.id.device_string);
             rowText.setText(d.toString());
+
+            // If the device violates our policy, change the arrow icon to the alert icon
+            if(d.violation){
+                ((ImageView)row.findViewById(R.id.row_arrow)).setImageResource(R.drawable.alert);
+                // TODO: Stabilize the order, make alert devices come first
+            }
 
             // Add functionality to the device string button
             row.setOnClickListener(new View.OnClickListener() {
@@ -85,6 +93,14 @@ public class DeviceList implements View.OnClickListener{
                     // When device string is clicked, show full device properties
                     ((TextView)pageScroll.findViewById(R.id.device_details)).setText(d.propsToString());
                     // TODO: set device icon
+
+                    // If the device violates our policy, show yet another alert
+                    if(d.violation) {
+                        pageScroll.findViewById(R.id.alert).setVisibility(View.VISIBLE);
+                    } else {
+                        // We need this else because the icon is shared among all devices of this datatype
+                        pageScroll.findViewById(R.id.alert).setVisibility(View.GONE);
+                    }
 
                     // Scroll to the right
                     pageScroll.smoothScrollTo(2*screen_width, 0);

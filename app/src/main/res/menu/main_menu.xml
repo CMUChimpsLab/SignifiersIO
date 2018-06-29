@@ -4,7 +4,7 @@
 
     <item
         android:id="@+id/edit"
-        android:icon="@android:drawable/ic_menu_preferences"
-        android:title="Edit"
+        android:icon="@drawable/gear"
+        android:title="Preferences"
         app:showAsAction="ifRoom" />
 </menu>

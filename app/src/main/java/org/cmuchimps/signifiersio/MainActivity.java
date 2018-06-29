@@ -25,7 +25,6 @@ public class MainActivity extends AppCompatActivity {
     private static final int ICONS_PER_ROW = 3;   // Number of icons in each row of the UI
     private static final int REFRESH_TIME = 10000; // ms between updating the device list
 
-    private JSONObject privacyPolicy = PrivacyParser.loadPP();
     private final DeviceDetector deviceDetector = new DeviceDetector(this);
     private Timer refreshTimer;
 
@@ -43,6 +42,9 @@ public class MainActivity extends AppCompatActivity {
                 rootView.getViewTreeObserver().removeOnGlobalLayoutListener(this);
             }
         });
+
+        // Load the privacy policy
+        PrivacyParser.loadPP();
     }
 
     @Override
@@ -97,7 +99,7 @@ public class MainActivity extends AppCompatActivity {
 
             // Turn on the alert icon if there's a violation
             for(Device dev : hierarchy.get(dt)){
-                if(!PrivacyParser.allows(privacyPolicy, dev)){
+                if(dev.violation){
                     icon.findViewById(R.id.alert).setVisibility(View.VISIBLE);
                     break;
                 }
