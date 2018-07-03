@@ -33,16 +33,6 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        // Offset the preferences pane downwards
-        final View rootView = this.findViewById(R.id.root_view);
-        rootView.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
-            @Override
-            public void onGlobalLayout() {
-                findViewById(R.id.prefs_page).setY(rootView.getHeight());
-                rootView.getViewTreeObserver().removeOnGlobalLayoutListener(this);
-            }
-        });
-
         // Load the privacy policy
         PrivacyParser.loadPP();
     }

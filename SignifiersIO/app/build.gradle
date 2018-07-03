@@ -31,5 +31,5 @@ dependencies {
     implementation 'com.android.support:design:26.1.0'
 
     // Volley library for getting data from the IoT hub
-    compile 'com.android.volley:volley:1.0.0'
+    implementation 'com.android.volley:volley:1.0.0'
 }

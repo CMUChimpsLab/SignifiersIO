@@ -26,6 +26,7 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="org.cmuchimps.signifiersio.MainActivity" />
         </activity>
+        <activity android:name=".NewException"></activity>
     </application>
 
 </manifest>
