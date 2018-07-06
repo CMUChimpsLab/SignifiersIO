@@ -9,6 +9,13 @@
     <string name="pref_header_general">General</string>
     <string name="pref_header_policy">Privacy Policy</string>
 
+    <string name="default_policy">{\'rule_type\':\'allow\'}</string>
+
     <!-- Key Strings -->
     <string name="exception_button">org.cmuchimps.signifiersio.exception_button</string>
+    <string name="exception_json">org.cmuchimps.signifiersio.exception_json</string>
+    <string name="exception_category">org.cmuchimps.signifiersio.exception_category</string>
+    <string name="root_allow_preference">org.cmuchimps.signifiersio.root_allow_preference</string>
+    <string name="privacy_policy">org.cmuchimps.signifiersio.privacy_policy</string>
+
 </resources>

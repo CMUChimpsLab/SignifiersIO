@@ -5,11 +5,17 @@
         android:defaultValue="0"
         android:entries="@array/privacy_root_dropdown"
         android:entryValues="@array/privacy_root_dropdown"
-        android:key="root_allow_preference"
+        android:key="@string/root_allow_preference"
         android:title="Default Behavior"
         android:summary="%s"/>
 
-    <Preference android:title="Add exception"
+    <Preference
+        android:title="Add exception"
         android:key="@string/exception_button"/>
+
+    <PreferenceCategory
+        android:title="Exceptions"
+        android:key="@string/exception_category"
+        android:orderingFromXml="true"/> <!-- This allows us to order the list programmatically -->
 
 </PreferenceScreen>
