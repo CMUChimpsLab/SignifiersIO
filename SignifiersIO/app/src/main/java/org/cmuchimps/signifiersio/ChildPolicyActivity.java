@@ -1,24 +1,32 @@
 package org.cmuchimps.signifiersio;
 
+import android.content.Context;
 import android.content.Intent;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.View;
 import android.widget.EditText;
-import android.widget.TextView;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
-public class NewException extends AppCompatActivity {
+import java.util.ArrayList;
 
+public class ChildPolicyActivity extends PolicyActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_new_exception);
+
+        // Initialize global variables
+        exceptions = new ArrayList<>();
+
+
+        // Create a new view from each exception and add it to the list
+        for(int i = 0; i < exceptions.size(); i++){
+            // TODO: make the order stable
+            addException(exceptions.get(i));
+        }
     }
 
     // Create the JSON of the current exception and return it as a result
@@ -40,13 +48,6 @@ public class NewException extends AppCompatActivity {
         }
 
         return exception;
-    }
-
-
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.exception_menu, menu);
-        return true;
     }
 
     @Override
