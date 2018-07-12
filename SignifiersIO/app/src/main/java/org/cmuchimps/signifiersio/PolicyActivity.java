@@ -53,38 +53,57 @@ public abstract class PolicyActivity extends AppCompatActivity {
         super.onActivityResult(requestCode, resultCode, data);
         Log.d("onActivityRequest","requestCode = "+requestCode);
 
-        // If the ChildPolicyActivity returned a new exception
-        if (requestCode == NEW_EXCEPTION_REQUEST && resultCode == RESULT_OK) {
-            try {
-                String exceptionJSON = data.getStringExtra(getString(R.string.exception_json));
-                JSONObject exception = new JSONObject(exceptionJSON);
+        if(resultCode == RESULT_OK) {
+            if (requestCode == NEW_EXCEPTION_REQUEST) {
+                // If the ChildPolicyActivity returned a new exception
+                try {
+                    String exceptionJSON = data.getStringExtra(getString(R.string.exception_json));
+                    JSONObject exception = new JSONObject(exceptionJSON);
 
-                // Add the new exception to our list
-                exceptions.add(exception);
+                    // Add the new exception to our list
+                    int index = exceptions.size();
+                    exceptions.add(exception);
 
-                // Create a Preference to display and allow editing of the exception
-                addException(exception);
+                    // Create a View to display and allow editing of the exception
+                    addException(exception, index);
 
-            } catch(JSONException e) {
-                Log.d("onActivityResult",e.toString());
+                } catch (JSONException e) {
+                    Log.d("onActivityResult", e.toString());
+                }
+
+            } else if(0 <= requestCode - EDIT_EXCEPTION_OFFSET &&
+                    requestCode - EDIT_EXCEPTION_OFFSET < exceptions.size()){
+                // If the ChildPolicyActivity returned an edited exception
+                try {
+                    String exceptionJSON = data.getStringExtra(getString(R.string.exception_json));
+                    JSONObject exception = new JSONObject(exceptionJSON);
+
+                    // Add the new exception to our list
+                    int index = exceptions.size();
+                    exceptions.add(exception);
+
+                } catch (JSONException e) {
+                    Log.d("onActivityResult", e.toString());
+                }
             }
         }
     }
 
-    protected void addException(JSONObject exception){
-        // TODO: use a custom view with an arrow or something
-        TextView p = new TextView(this);
-        p.setTextAppearance(R.style.TextAppearance_AppCompat_Large);
+    // Add exception (in JSON format) to our list of exceptions and create a view for it
+    protected void addException(JSONObject exception, int index){
+        PolicyException p = new PolicyException(this);
         p.setText(summarizeException(exception));
+        p.setIndex(index);
 
         p.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-
+                // TODO: use index to edit this exception
+                //((PolicyException)view).getIndex();
             }
         });
 
-        // Add this Preference to the view
+        // Add this view to the LinearLayout
         exceptionList.addView(p);
     }
 

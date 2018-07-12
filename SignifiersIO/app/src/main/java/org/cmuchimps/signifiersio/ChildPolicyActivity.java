@@ -25,7 +25,7 @@ public class ChildPolicyActivity extends PolicyActivity {
         // Create a new view from each exception and add it to the list
         for(int i = 0; i < exceptions.size(); i++){
             // TODO: make the order stable
-            addException(exceptions.get(i));
+            addException(exceptions.get(i), i);
         }
     }
 
@@ -42,7 +42,19 @@ public class ChildPolicyActivity extends PolicyActivity {
         JSONObject exception = new JSONObject();
 
         try{
-            exception.put("company",((EditText)findViewById(R.id.company_edit)).getText());
+            String data_type = ((EditText)findViewById(R.id.datatype_edit)).getText().toString();
+            if(!data_type.equals("")) { exception.put("data_type", data_type); }
+            
+            String device_name = ((EditText)findViewById(R.id.device_name_edit)).getText().toString();
+            if(!device_name.equals("")) { exception.put("device_name", device_name); }
+
+            String company = ((EditText)findViewById(R.id.company_edit)).getText().toString();
+            if(!company.equals("")) { exception.put("company", company); }
+
+            String purpose = ((EditText)findViewById(R.id.purpose_edit)).getText().toString();
+            if(!purpose.equals("")) { exception.put("purpose", purpose); }
+            
+            // TODO: add exceptions
         } catch(JSONException e){
             Log.e("NewException", e.toString());
         }

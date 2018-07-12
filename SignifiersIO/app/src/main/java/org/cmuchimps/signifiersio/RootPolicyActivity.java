@@ -70,17 +70,18 @@ public class RootPolicyActivity extends PolicyActivity {
         // Create a new view from each exception and add it to the list
         for(int i = 0; i < exceptions.size(); i++){
             // TODO: make the order stable
-            addException(exceptions.get(i));
+            addException(exceptions.get(i), i);
         }
     }
 
     // Called when the new exception activity finishes
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        // Let super handle most things
         super.onActivityResult(requestCode, resultCode, data);
-        // If the NewException activity returned a new exception
-        if (requestCode == NEW_EXCEPTION_REQUEST && resultCode == RESULT_OK) {
-            // Save the new policy
+
+        // If the NewException activity returned a new exception, save the policy
+        if (requestCode == NEW_EXCEPTION_REQUEST && resultCode == RESULT_OK){
             updatePP();
         }
     }
