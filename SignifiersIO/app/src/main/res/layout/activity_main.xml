@@ -13,6 +13,32 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:stretchColumns="*"> <!-- Space columns evenly -->
-        </TableLayout>
+        <TableRow
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <TextView
+                android:id="@+id/textView"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Searching for IoT hub..."
+                android:textAlignment="center"
+                android:textAppearance="@style/TextAppearance.AppCompat.Title"
+                android:layout_marginTop="16dp"
+                android:layout_marginBottom="16dp"/>
+        </TableRow>
+
+        <TableRow
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" >
+
+            <ProgressBar
+                android:id="@+id/progressBar2"
+                style="?android:attr/progressBarStyleHorizontal"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:indeterminate="true" />
+        </TableRow>
+    </TableLayout>
 
 </android.support.constraint.ConstraintLayout>

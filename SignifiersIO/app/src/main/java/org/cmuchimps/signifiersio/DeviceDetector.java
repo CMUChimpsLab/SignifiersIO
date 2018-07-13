@@ -18,26 +18,68 @@ import java.util.EnumMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.Timer;
+import java.util.TimerTask;
 
 public class DeviceDetector {
+    // Device organization
     private Set<Device> devices; // Current set of devices
     private EnumMap<DataType, Set<Device>> deviceHierarchy; // Organized as the user sees it
-    private final Context context; // Required for volley
-    private int time = 0; // TODO: remove when testing is done
-    private final static String DD_URL = "http://lemonshark.ics.cs.cmu.edu:24390/devices.json";
 
-    public DeviceDetector(Context context){
+    // Networking
+    private final Context context; // Required for volley
+    private static final String PREFIX = "http://";
+    private String host;
+    private static final String URI = "/devices.json";
+
+    // Timing
+    private Timer refreshTimer; // Timer will only start when host Activity resumes
+    private static final int REFRESH_TIME = 10000;
+
+    // Other
+    private DeviceUpdateListener listener; // We call listener's onDeviceUpdate when the devices change
+
+    public DeviceDetector(Context context, String hostAddress){
         this.context = context;
+        this.host = hostAddress;
 
         // Initialize with no devices
         devices = new HashSet<>();
         rebuildHierarchy();
     }
 
+    public void setOnDeviceUpdateListener(DeviceUpdateListener listener){
+        this.listener = listener;
+    }
+
+    // Called from Activity's onResume()
+    protected void resume(){
+        refreshTimer = new Timer();
+        refreshTimer.schedule(new TimerTask(){
+            public void run(){
+                refresh();
+
+                // TODO: remove dead code if runOnUiThread is unnecessary
+                /*((MainActivity)context).runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+
+                    }
+                });*/
+            }
+        }, 0, REFRESH_TIME);
+    }
+
+    // Called from Activity's onPause()
+    protected void pause(){
+        // Stop refreshing when you pause the app
+        refreshTimer.cancel();
+    }
+
     // Refresh the devices and update devices and deviceHierarchy
     public void refresh(){
         // Fetch data from IoT hub
-        StringRequest request = new StringRequest(DD_URL, new Response.Listener<String>() {
+        StringRequest request = new StringRequest(DeviceDetector.PREFIX + this.host + DeviceDetector.URI, new Response.Listener<String>() {
             @Override
             public void onResponse(String string) {
                 try {
@@ -50,6 +92,7 @@ public class DeviceDetector {
 
                     // TODO: Only do this if devices hasn't changed
                     rebuildHierarchy();
+                    listener.onDeviceUpdate();
                 } catch (JSONException e){
                     Log.e("DD invalid JSON", e.toString());
                 }
@@ -69,7 +112,6 @@ public class DeviceDetector {
         devices = new HashSet<Device>();
 
         try{
-            if(time % 3 != 0)
             devices.add(new Device(new JSONObject(
                     "{'company':'Google', 'purpose':'advertising', 'data_type':'audio', 'device_name':'Google Home'}")));
             devices.add(new Device(new JSONObject(
@@ -83,8 +125,6 @@ public class DeviceDetector {
         } catch(JSONException e){
             Log.e("refreshDevices JSON err", e.toString());
         }
-
-        time++;
     }
 
     // Turn a JSONArray into a Set of Devices
