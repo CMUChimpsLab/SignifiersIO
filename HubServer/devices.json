@@ -1,0 +1,28 @@
+[
+{
+    "company":"Google",
+    "device_name":"Google Home",
+    "data_type":"audio",
+    "purpose":"advertising",
+    "device_id":"id0"
+},
+{
+    "company":"Apple",
+    "data_type":"location",
+    "purpose":"security",
+    "device_id":"id1"
+},
+{
+    "company":"Phishing4Less",
+    "data_type":"video",
+    "purpose":"advertising",
+    "device_id":"id2"
+},
+{
+    "company":"Facebook",
+    "device_name":"Facecam",
+    "data_type":"video",
+    "purpose":"communication",
+    "device_id":"id3"
+}
+]
