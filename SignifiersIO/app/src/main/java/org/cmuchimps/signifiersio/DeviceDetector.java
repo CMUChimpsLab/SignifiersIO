@@ -34,7 +34,7 @@ public class DeviceDetector {
 
     // Timing
     private Timer refreshTimer; // Timer will only start when host Activity resumes
-    private static final int REFRESH_TIME = 10000;
+    private static final int REFRESH_TIME = 1000000;
 
     // Other
     private DeviceUpdateListener listener; // We call listener's onDeviceUpdate when the devices change

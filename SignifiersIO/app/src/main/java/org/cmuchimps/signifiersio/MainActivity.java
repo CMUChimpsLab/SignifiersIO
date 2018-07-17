@@ -16,7 +16,16 @@ import android.widget.ImageView;
 import android.widget.TableLayout;
 import android.widget.TableRow;
 
+import com.android.volley.AuthFailureError;
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.StringRequest;
+import com.android.volley.toolbox.Volley;
+
 import java.net.InetAddress;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.Timer;
@@ -35,6 +44,7 @@ public class MainActivity extends AppCompatActivity implements DeviceUpdateListe
     private NsdManager.DiscoveryListener mDiscoveryListener;
     private NsdManager.ResolveListener mResolveListener;
     private NsdManager mNsdManager;
+    private String hub_address;
     private static final String SERVICE_TYPE = "_http._tcp."; // TODO: pick the right service type
     private static final String SERVICE_NAME = "iot_hub";
 
@@ -109,7 +119,7 @@ public class MainActivity extends AppCompatActivity implements DeviceUpdateListe
             }
 
             // Create the click listener that will pop up a device list
-            icon.setOnClickListener(new DeviceList(findViewById(R.id.root_view),dt,hierarchy.get(dt)));
+            icon.setOnClickListener(new DeviceList(findViewById(R.id.root_view),dt,hierarchy.get(dt), MainActivity.this));
 
             row.addView(icon);
             tableIndex++;
@@ -201,16 +211,50 @@ public class MainActivity extends AppCompatActivity implements DeviceUpdateListe
             @Override
             public void onServiceResolved(NsdServiceInfo serviceInfo) {
                 InetAddress host = serviceInfo.getHost();
-                String address = host.getHostAddress();
-                Log.d(TAG, "Resolved address = " + address);
+                hub_address = host.getHostAddress();
+                Log.d(TAG, "Resolved address = " + hub_address);
 
                 // Create a DeviceDetector with the address of the IoT hub
-                deviceDetector = new DeviceDetector(MainActivity.this, address);
+                deviceDetector = new DeviceDetector(MainActivity.this, hub_address);
                 deviceDetector.setOnDeviceUpdateListener(MainActivity.this);
                 deviceDetector.resume();
 
                 // TODO: add a listener for when we lose the connection
             }
         };
+    }
+
+    public void light(final String deviceId){
+        Log.d("device id", deviceId);
+        StringRequest request = new StringRequest(Request.Method.POST, "http://" + hub_address, new Response.Listener<String>() {
+            @Override
+            public void onResponse(String response) {
+                Log.d("light Response", response);
+            }
+        }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                Log.e("light Error", error.toString());
+            }
+        }){
+            @Override
+            protected Map<String,String> getParams(){
+                Map<String,String> params = new HashMap<String, String>();
+                params.put(deviceId, "0");
+                Log.d("light", "getParams");
+
+                return params;
+            }
+            @Override
+            public Map<String, String> getHeaders() throws AuthFailureError {
+                Log.d("light","getHeaders");
+                Map<String,String> params = new HashMap<String, String>();
+                params.put("Content-Type","text/plain");
+                return params;
+            }
+        };
+
+        RequestQueue rQueue = Volley.newRequestQueue(this);
+        rQueue.add(request);
     }
 }
