@@ -29,7 +29,7 @@ public class DeviceDetector {
     // Networking
     private final Context context; // Required for volley
     private static final String PREFIX = "http://";
-    private String host;
+    private String hostAddr;
     private static final String URI = "/devices.json";
 
     // Timing
@@ -39,9 +39,9 @@ public class DeviceDetector {
     // Other
     private DeviceUpdateListener listener; // We call listener's onDeviceUpdate when the devices change
 
-    public DeviceDetector(Context context, String hostAddress){
+    public DeviceDetector(Context context, String hostAddr){
         this.context = context;
-        this.host = hostAddress;
+        this.hostAddr = hostAddr;
 
         // Initialize with no devices
         devices = new HashSet<>();
@@ -79,7 +79,7 @@ public class DeviceDetector {
     // Refresh the devices and update devices and deviceHierarchy
     public void refresh(){
         // Fetch data from IoT hub
-        StringRequest request = new StringRequest(DeviceDetector.PREFIX + this.host + DeviceDetector.URI, new Response.Listener<String>() {
+        StringRequest request = new StringRequest(DeviceDetector.PREFIX + this.hostAddr + DeviceDetector.URI, new Response.Listener<String>() {
             @Override
             public void onResponse(String string) {
                 try {

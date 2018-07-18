@@ -53,7 +53,7 @@ public class RootPolicyActivity extends PolicyActivity {
         allowGroup.setVisibility(View.VISIBLE);
 
         // Hide the unnecessary components
-        int[] ids = {R.id.datatype_layout,R.id.device_name_layout,R.id.company_layout,R.id.purpose_layout};
+        int[] ids = {R.id.datatype_layout,R.id.device_name_layout,R.id.company_layout,R.id.purpose_layout,R.id.status_layout};
         for(int id : ids){
             findViewById(id).setVisibility(View.GONE);
         }

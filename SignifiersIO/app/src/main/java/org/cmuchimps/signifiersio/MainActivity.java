@@ -224,8 +224,8 @@ public class MainActivity extends AppCompatActivity implements DeviceUpdateListe
         };
     }
 
+
     public void light(final String deviceId){
-        Log.d("device id", deviceId);
         StringRequest request = new StringRequest(Request.Method.POST, "http://" + hub_address, new Response.Listener<String>() {
             @Override
             public void onResponse(String response) {

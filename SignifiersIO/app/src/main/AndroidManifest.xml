@@ -18,16 +18,18 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".RootPolicyActivity"
+        <activity
+            android:name=".RootPolicyActivity"
             android:label="@string/title_activity_root_policy"
             android:parentActivityName=".MainActivity">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="org.cmuchimps.signifiersio.MainActivity" />
         </activity>
-        <activity android:name=".ChildPolicyActivity"
-            android:label="@string/title_activity_child_policy">
-        </activity>
+        <activity
+            android:name=".ChildPolicyActivity"
+            android:label="@string/title_activity_child_policy"></activity>
+        <activity android:name=".IndicatorFilter"></activity>
     </application>
 
 </manifest>

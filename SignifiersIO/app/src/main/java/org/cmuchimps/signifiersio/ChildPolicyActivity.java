@@ -53,7 +53,10 @@ public class ChildPolicyActivity extends PolicyActivity {
 
             String purpose = ((EditText)findViewById(R.id.purpose_edit)).getText().toString();
             if(!purpose.equals("")) { exception.put("purpose", purpose); }
-            
+
+            String status = ((EditText)findViewById(R.id.status_edit)).getText().toString();
+            if(!status.equals("")) { exception.put("status", status); }
+
             // TODO: add exceptions
         } catch(JSONException e){
             Log.e("NewException", e.toString());
