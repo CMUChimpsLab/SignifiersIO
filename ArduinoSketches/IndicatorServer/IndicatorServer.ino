@@ -4,12 +4,13 @@
 #include <ESP8266mDNS.h>
 
 const char* ssid = "CMU";
+const char* password = "whatever";
 
 ESP8266WebServer server(80);
 
-const int ledR = 13;
-const int ledG = 12;
-const int ledB = 14;
+const int ledR = 14;
+const int ledG = 16;
+const int ledB = 13;
 
 const char RED_MASK = 1;
 const char GREEN_MASK = 2;
@@ -53,8 +54,10 @@ void setup(void) {
 
   Serial.begin(115200);
   WiFi.mode(WIFI_STA);
-  WiFi.begin(ssid);
+  WiFi.begin(ssid, password);
   Serial.println("");
+  Serial.print("MAC ");
+  Serial.println(WiFi.macAddress());
 
   // Wait for connection
   while (WiFi.status() != WL_CONNECTED) {
@@ -67,15 +70,9 @@ void setup(void) {
   Serial.print("IP address: ");
   Serial.println(WiFi.localIP());
 
-  if (MDNS.begin("esp8266")) {
+  if (MDNS.begin("pizzaz")) {
     Serial.println("MDNS responder started");
   }
-
-  //  server.on("/", handleRoot);
-  //
-  //  server.on("/inline", [](){
-  //    server.send(200, "text/plain", "this works as well");
-  //  });
 
   server.on("/", []() {
     server.send(200, "text/plain", "GET /1 through /7 to turn on the lights");

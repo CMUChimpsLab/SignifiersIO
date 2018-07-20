@@ -38,17 +38,6 @@ interface DeviceUpdateListener {
 public class MainActivity extends AppCompatActivity implements DeviceUpdateListener {
     private static final int ICONS_PER_ROW = 3;   // Number of icons in each row of the UI
 
-    private DeviceDetector deviceDetector = null;
-
-    // DNS service discovery
-    private NsdManager.DiscoveryListener mDiscoveryListener;
-    private NsdManager.ResolveListener mResolveListener;
-    private NsdManager mNsdManager;
-    private String hub_address;
-    private static final String SERVICE_TYPE = "_http._tcp."; // TODO: pick the right service type
-    private static final String SERVICE_NAME = "iot_hub";
-
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -57,37 +46,30 @@ public class MainActivity extends AppCompatActivity implements DeviceUpdateListe
         // Load the privacy policy
         PrivacyParser.loadPP();
 
-        // Set up the NSD manager and listeners
-        mNsdManager = (NsdManager)getApplicationContext().getSystemService(Context.NSD_SERVICE);
-        initializeResolveListener();
-        initializeDiscoveryListener();
-        mNsdManager.discoverServices(SERVICE_TYPE, NsdManager.PROTOCOL_DNS_SD, mDiscoveryListener);
+        DeviceDetector.startDiscovery(this);
+        DeviceDetector.setOnDeviceUpdateListener(this);
     }
 
     @Override
     protected void onResume(){
         super.onResume();
 
-        // Resume the deviceDetector's timer
-        if(deviceDetector != null){
-            deviceDetector.resume();
-        }
+        // Resume DeviceDetector's timer
+        DeviceDetector.resume();
     }
 
     @Override
     public void onPause() {
         super.onPause();
 
-        // Pause the deviceDetector's timer
-        if(deviceDetector != null){
-            deviceDetector.pause();
-        }
+        // Pause DeviceDetector's timer
+        DeviceDetector.pause();
     }
 
     // When devices update, rebuild all the icons
     public void onDeviceUpdate(){
         // Get the new list of devices
-        Map<DataType, Set<Device>> hierarchy = deviceDetector.getDeviceHierarchy();
+        Map<DataType, Set<Device>> hierarchy = DeviceDetector.getDeviceHierarchy();
 
         // Remove the old icons
         TableLayout table = findViewById(R.id.icon_table);
@@ -119,7 +101,7 @@ public class MainActivity extends AppCompatActivity implements DeviceUpdateListe
             }
 
             // Create the click listener that will pop up a device list
-            icon.setOnClickListener(new DeviceList(findViewById(R.id.root_view),dt,hierarchy.get(dt), MainActivity.this));
+            icon.setOnClickListener(new DeviceList(findViewById(R.id.root_view),dt,hierarchy.get(dt)));
 
             row.addView(icon);
             tableIndex++;
@@ -143,118 +125,5 @@ public class MainActivity extends AppCompatActivity implements DeviceUpdateListe
             default:
                 return super.onOptionsItemSelected(item);
         }
-    }
-
-    // Set up NSD discovery to find the IoT hub
-    public void initializeDiscoveryListener() {
-        // Instantiate a new DiscoveryListener
-        mDiscoveryListener = new NsdManager.DiscoveryListener() {
-            private static final String TAG = "NSD_discover";
-
-            // Called as soon as service discovery begins.
-            @Override
-            public void onDiscoveryStarted(String regType) {
-                Log.d(TAG, "Service discovery started: "+regType);
-            }
-
-            @Override
-            public void onServiceFound(NsdServiceInfo service) {
-                // A service was found! Do something with it.
-                Log.d(TAG, "Service discovery success " + service);
-                if (!service.getServiceType().equals(SERVICE_TYPE)) {
-                    // Service type is the string containing the protocol and
-                    // transport layer for this service.
-                    Log.d(TAG, "Unknown Service Type: " + service.getServiceType());
-                } else if (service.getServiceName().contains(SERVICE_NAME)){ //TODO: .equals?
-                    Log.d(TAG,"resolving " + service);
-                    mNsdManager.resolveService(service, mResolveListener);
-                }
-            }
-
-            @Override
-            public void onServiceLost(NsdServiceInfo service) {
-                // When the network service is no longer available.
-                // Internal bookkeeping code goes here.
-                Log.e(TAG, "service lost" + service);
-            }
-
-            @Override
-            public void onDiscoveryStopped(String serviceType) {
-                Log.i(TAG, "Discovery stopped: " + serviceType);
-            }
-
-            @Override
-            public void onStartDiscoveryFailed(String serviceType, int errorCode) {
-                Log.e(TAG, "Start Discovery failed: Error code:" + errorCode);
-                mNsdManager.stopServiceDiscovery(this);
-            }
-
-            @Override
-            public void onStopDiscoveryFailed(String serviceType, int errorCode) {
-                Log.e(TAG, "Stop Discovery failed: Error code:" + errorCode);
-                mNsdManager.stopServiceDiscovery(this);
-            }
-        };
-    }
-
-    // Set up te resolver to get the IP of the IoT hub and create a DeviceDetector
-    private void initializeResolveListener() {
-        mResolveListener = new NsdManager.ResolveListener() {
-            private static final String TAG = "NSD_resolve";
-
-            @Override
-            public void onResolveFailed(NsdServiceInfo serviceInfo, int errorCode) {
-                // Called when the resolve fails.  Use the error code to debug.
-                Log.e(TAG, "Resolve failed" + errorCode);
-            }
-
-            @Override
-            public void onServiceResolved(NsdServiceInfo serviceInfo) {
-                InetAddress host = serviceInfo.getHost();
-                hub_address = host.getHostAddress();
-                Log.d(TAG, "Resolved address = " + hub_address);
-
-                // Create a DeviceDetector with the address of the IoT hub
-                deviceDetector = new DeviceDetector(MainActivity.this, hub_address);
-                deviceDetector.setOnDeviceUpdateListener(MainActivity.this);
-                deviceDetector.resume();
-
-                // TODO: add a listener for when we lose the connection
-            }
-        };
-    }
-
-
-    public void light(final String deviceId){
-        StringRequest request = new StringRequest(Request.Method.POST, "http://" + hub_address, new Response.Listener<String>() {
-            @Override
-            public void onResponse(String response) {
-                Log.d("light Response", response);
-            }
-        }, new Response.ErrorListener() {
-            @Override
-            public void onErrorResponse(VolleyError error) {
-                Log.e("light Error", error.toString());
-            }
-        }){
-            @Override
-            protected Map<String,String> getParams(){
-                Map<String,String> params = new HashMap<String, String>();
-                params.put(deviceId, "0");
-                Log.d("light", "getParams");
-
-                return params;
-            }
-            @Override
-            public Map<String, String> getHeaders() throws AuthFailureError {
-                Log.d("light","getHeaders");
-                Map<String,String> params = new HashMap<String, String>();
-                params.put("Content-Type","text/plain");
-                return params;
-            }
-        };
-
-        RequestQueue rQueue = Volley.newRequestQueue(this);
-        rQueue.add(request);
     }
 }

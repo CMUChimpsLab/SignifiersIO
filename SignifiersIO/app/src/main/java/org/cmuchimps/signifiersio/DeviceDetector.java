@@ -1,9 +1,11 @@
 package org.cmuchimps.signifiersio;
 
 import android.content.Context;
+import android.net.nsd.NsdManager;
+import android.net.nsd.NsdServiceInfo;
 import android.util.Log;
-import android.widget.Toast;
 
+import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
@@ -14,7 +16,9 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.net.InetAddress;
 import java.util.EnumMap;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -23,63 +27,73 @@ import java.util.TimerTask;
 
 public class DeviceDetector {
     // Device organization
-    private Set<Device> devices; // Current set of devices
-    private EnumMap<DataType, Set<Device>> deviceHierarchy; // Organized as the user sees it
+    private static Set<Device> devices; // Current set of devices
+    private static EnumMap<DataType, Set<Device>> deviceHierarchy; // Organized as the user sees it
 
     // Networking
-    private final Context context; // Required for volley
     private static final String PREFIX = "http://";
-    private String hostAddr;
     private static final String URI = "/devices.json";
+    private static boolean connected = false;
+    private static String hubAddress;
+    private static RequestQueue requestQueue;
+
+    // DNS service discovery
+    private static NsdManager.DiscoveryListener mDiscoveryListener;
+    private static NsdManager.ResolveListener mResolveListener;
+    private static NsdManager mNsdManager;
+    private static final String SERVICE_TYPE = "_http._tcp.";
+    private static final String SERVICE_NAME = "iot_hub";
 
     // Timing
-    private Timer refreshTimer; // Timer will only start when host Activity resumes
-    private static final int REFRESH_TIME = 1000000;
+    private static Timer refreshTimer; // Timer to periodically refresh devices
+    private static final int REFRESH_TIME = 10000;
 
     // Other
-    private DeviceUpdateListener listener; // We call listener's onDeviceUpdate when the devices change
+    private static DeviceUpdateListener listener; // We call listener's onDeviceUpdate when the devices change
 
-    public DeviceDetector(Context context, String hostAddr){
-        this.context = context;
-        this.hostAddr = hostAddr;
+    public static void startDiscovery(Context context){
+        requestQueue = Volley.newRequestQueue(context);
+
+        // Set up the NSD manager and listeners
+        mNsdManager = (NsdManager)context.getSystemService(Context.NSD_SERVICE);
+        initializeResolveListener();
+        initializeDiscoveryListener();
+        mNsdManager.discoverServices(SERVICE_TYPE, NsdManager.PROTOCOL_DNS_SD, mDiscoveryListener);
 
         // Initialize with no devices
         devices = new HashSet<>();
         rebuildHierarchy();
     }
 
-    public void setOnDeviceUpdateListener(DeviceUpdateListener listener){
-        this.listener = listener;
+    public static void setOnDeviceUpdateListener(DeviceUpdateListener listener){
+        DeviceDetector.listener = listener;
     }
 
     // Called from Activity's onResume()
-    protected void resume(){
+    protected static void resume(){
         refreshTimer = new Timer();
         refreshTimer.schedule(new TimerTask(){
             public void run(){
                 refresh();
-
-                // TODO: remove dead code if runOnUiThread is unnecessary
-                /*((MainActivity)context).runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-
-                    }
-                });*/
             }
         }, 0, REFRESH_TIME);
     }
 
     // Called from Activity's onPause()
-    protected void pause(){
+    protected static void pause(){
         // Stop refreshing when you pause the app
         refreshTimer.cancel();
     }
 
     // Refresh the devices and update devices and deviceHierarchy
-    public void refresh(){
+    private static void refresh(){
+        if(!connected){
+            // Haven't found anything to get data from
+            return;
+        }
+
         // Fetch data from IoT hub
-        StringRequest request = new StringRequest(DeviceDetector.PREFIX + this.hostAddr + DeviceDetector.URI, new Response.Listener<String>() {
+        StringRequest request = new StringRequest(DeviceDetector.PREFIX + hubAddress + DeviceDetector.URI, new Response.Listener<String>() {
             @Override
             public void onResponse(String string) {
                 try {
@@ -103,12 +117,11 @@ public class DeviceDetector {
                 Log.e("Device Detector error",volleyError.toString()); //volleyError.getMessage()
             }
         });
-        RequestQueue rQueue = Volley.newRequestQueue(this.context);
-        rQueue.add(request);
+        requestQueue.add(request);
     }
 
     // Set some stock devices
-    private void setDevicesDummy(){
+    private static void setDevicesDummy(){
         devices = new HashSet<Device>();
 
         try{
@@ -128,7 +141,7 @@ public class DeviceDetector {
     }
 
     // Turn a JSONArray into a Set of Devices
-    private void updateDevices(JSONArray jsonDevices) throws JSONException {
+    private static void updateDevices(JSONArray jsonDevices) throws JSONException {
         // Initialize new set with initial capacity = # devices
         Set<Device> newDevices = new HashSet<>(jsonDevices.length());
 
@@ -137,11 +150,11 @@ public class DeviceDetector {
             newDevices.add(new Device(jsonDevices.getJSONObject(i)));
         }
 
-        this.devices = newDevices;
+        devices = newDevices;
     }
 
     // Make deviceHierarchy use the data in devices
-    private void rebuildHierarchy() {
+    private static void rebuildHierarchy() {
         deviceHierarchy = new EnumMap<DataType, Set<Device>>(DataType.class);
 
         // Add each device to the proper set in the hierarchy, based on its datatype
@@ -156,7 +169,134 @@ public class DeviceDetector {
         }
     }
 
-    public Map<DataType, Set<Device>> getDeviceHierarchy(){
+    // Set up NSD discovery to find the IoT hub
+    private static void initializeDiscoveryListener() {
+        // Instantiate a new DiscoveryListener
+        mDiscoveryListener = new NsdManager.DiscoveryListener() {
+            private static final String TAG = "NSD_discover";
+
+            // Called as soon as service discovery begins.
+            @Override
+            public void onDiscoveryStarted(String regType) {
+                Log.d(TAG, "Service discovery started: "+regType);
+            }
+
+            @Override
+            public void onServiceFound(NsdServiceInfo service) {
+                // A service was found! Do something with it.
+                Log.d(TAG, "Service discovery success " + service);
+                if (!service.getServiceType().equals(SERVICE_TYPE)) {
+                    // Service type is the string containing the protocol and
+                    // transport layer for this service.
+                    Log.d(TAG, "Unknown Service Type: " + service.getServiceType());
+                } else if (service.getServiceName().contains(SERVICE_NAME)){ //TODO: .equals?
+                    Log.d(TAG,"resolving " + service);
+                    mNsdManager.resolveService(service, mResolveListener);
+                }
+            }
+
+            @Override
+            public void onServiceLost(NsdServiceInfo service) {
+                // When the network service is no longer available.
+                // Internal bookkeeping code goes here.
+                Log.e(TAG, "service lost" + service);
+            }
+
+            @Override
+            public void onDiscoveryStopped(String serviceType) {
+                Log.i(TAG, "Discovery stopped: " + serviceType);
+            }
+
+            @Override
+            public void onStartDiscoveryFailed(String serviceType, int errorCode) {
+                Log.e(TAG, "Start Discovery failed: Error code:" + errorCode);
+                mNsdManager.stopServiceDiscovery(this);
+            }
+
+            @Override
+            public void onStopDiscoveryFailed(String serviceType, int errorCode) {
+                Log.e(TAG, "Stop Discovery failed: Error code:" + errorCode);
+                mNsdManager.stopServiceDiscovery(this);
+            }
+        };
+    }
+
+    // Set up te resolver to get the IP of the IoT hub and create a DeviceDetector
+    private static void initializeResolveListener() {
+        mResolveListener = new NsdManager.ResolveListener() {
+            private static final String TAG = "NSD_resolve";
+
+            @Override
+            public void onResolveFailed(NsdServiceInfo serviceInfo, int errorCode) {
+                // Called when the resolve fails.  Use the error code to debug.
+                Log.e(TAG, "Resolve failed" + errorCode);
+            }
+
+            @Override
+            public void onServiceResolved(NsdServiceInfo serviceInfo) {
+                InetAddress host = serviceInfo.getHost();
+                hubAddress = host.getHostAddress();
+                connected = true;
+
+                // Restart the timer so we access the devices immediately
+                if(refreshTimer != null){
+                    refreshTimer.cancel();
+                    resume();
+                }
+
+                Log.d(TAG, "Resolved address = " + hubAddress);
+
+                // TODO: add a listener for when we lose the connection
+            }
+        };
+    }
+
+    // Light up the devices in lightDevices
+    public static void light(final Set<Device> lightDevices){
+        if(lightDevices.size() == 0){
+            Log.d("light", "No devices!");
+            return;
+        }
+
+        StringRequest request = new StringRequest(Request.Method.POST, "http://" + hubAddress, new Response.Listener<String>() {
+            @Override
+            public void onResponse(String response) {
+                Log.d("light Response", response);
+
+                // TODO: use response to show color
+            }
+        }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                Log.e("light Error", error.toString());
+            }
+        }){
+            // Add devices to POST request
+            @Override
+            protected Map<String,String> getParams(){
+                Map<String,String> params = new HashMap<>();
+                for(Device d : lightDevices) {
+                    // Make devices that violate policy show red
+                    params.put(d.getProperty("device_id"), d.violation ? "1" : "0");
+                }
+
+                return params;
+            }
+
+            // TODO: try removing this
+            @Override
+            public Map<String, String> getHeaders() {
+                Log.d("light","getHeaders");
+                Map<String,String> params = new HashMap<>();
+                params.put("Content-Type","text/plain");
+                return params;
+            }
+        };
+
+        requestQueue.add(request);
+    }
+
+    public static Map<DataType, Set<Device>> getDeviceHierarchy(){
         return deviceHierarchy;
     }
 }

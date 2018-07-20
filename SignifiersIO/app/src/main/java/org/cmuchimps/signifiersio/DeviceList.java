@@ -14,6 +14,7 @@ import android.widget.LinearLayout;
 import android.widget.PopupWindow;
 import android.widget.TextView;
 
+import java.util.HashSet;
 import java.util.Set;
 
 //import static android.content.Context.LAYOUT_INFLATER_SERVICE;
@@ -23,13 +24,11 @@ public class DeviceList implements View.OnClickListener{
     private final DataType dataType;
     private Set<Device> deviceSet;
     private PopupWindow popupWindow;
-    private final MainActivity mainActivity;
 
-    public DeviceList(View parentView, DataType dataType, Set<Device> deviceSet, MainActivity mainActivity){
+    public DeviceList(View parentView, DataType dataType, Set<Device> deviceSet){
         this.parentView = parentView;
         this.dataType = dataType;
         this.deviceSet = deviceSet;
-        this.mainActivity = mainActivity;
     }
 
 
@@ -105,7 +104,9 @@ public class DeviceList implements View.OnClickListener{
                     pageScroll.smoothScrollTo(2*screen_width, 0);
 
                     // Send a request to light this device
-                    mainActivity.light(d.getProperty("device_id"));
+                    HashSet<Device> singleton = new HashSet<>(1);
+                    singleton.add(d);
+                    DeviceDetector.light(singleton);
                 }
             });
             deviceList.addView(row);
