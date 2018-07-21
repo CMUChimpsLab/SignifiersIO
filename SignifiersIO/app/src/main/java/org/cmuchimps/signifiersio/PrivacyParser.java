@@ -155,15 +155,15 @@ public class PrivacyParser {
         return true;
     }
 
-    // Returns true if device is allowed by policy and false if device violates policy
-    public static boolean allows(Device device) {
+    // Returns true if device is allowed by testPolicy and false if device violates testPpolicy
+    public static boolean allows(Device device, JSONObject testPolicy) {
         try {
             // Whether device is allowed by policy
-            boolean allowed = policy.getString("rule_type").equalsIgnoreCase("allow");
+            boolean allowed = testPolicy.getString("rule_type").equalsIgnoreCase("allow");
 
             // If device matches any exception, negate matches
-            if (policy.has("except")) {
-                JSONArray es = policy.getJSONArray("except");
+            if (testPolicy.has("except")) {
+                JSONArray es = testPolicy.getJSONArray("except");
                 for (int i = 0; i < es.length(); i++) {
                     JSONObject e = es.getJSONObject(i);
                     if (ruleMatch(e, device)) {
@@ -179,5 +179,10 @@ public class PrivacyParser {
             return false;
         }
 
+    }
+
+    // Returns true if device is allowed by policy
+    public static boolean allows(Device device){
+        return allows(device, policy);
     }
 }

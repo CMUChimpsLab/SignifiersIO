@@ -117,9 +117,14 @@ public class MainActivity extends AppCompatActivity implements DeviceUpdateListe
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item){
+        Intent intent;
         switch(item.getItemId()){
             case R.id.edit:
-                Intent intent = new Intent(this, RootPolicyActivity.class);
+                intent = new Intent(this, RootPolicyActivity.class);
+                startActivity(intent);
+                return true;
+            case R.id.indicators:
+                intent = new Intent(this, IndicatorFilter.class);
                 startActivity(intent);
                 return true;
             default:

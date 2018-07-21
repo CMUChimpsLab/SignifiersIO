@@ -3,6 +3,11 @@
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <item
+        android:id="@+id/indicators"
+        android:icon="@drawable/led"
+        android:title="Indicators"
+        app:showAsAction="ifRoom" />
+    <item
         android:id="@+id/edit"
         android:icon="@drawable/gear"
         android:title="Preferences"

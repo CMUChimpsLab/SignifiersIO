@@ -299,4 +299,7 @@ public class DeviceDetector {
     public static Map<DataType, Set<Device>> getDeviceHierarchy(){
         return deviceHierarchy;
     }
+    public static Set<Device> getDevices(){
+        return devices;
+    }
 }
