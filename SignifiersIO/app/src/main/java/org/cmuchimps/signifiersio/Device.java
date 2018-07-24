@@ -59,7 +59,7 @@ public class Device {
     public String toString(){
         StringBuilder res = new StringBuilder();
         boolean first = true;
-        String[] props = {"company","device_name","purpose"};
+        String[] props = {"device_name","data_type","purpose"};
 
         for(String property : props){
             if(this.hasProperty(property)) {
@@ -69,6 +69,16 @@ public class Device {
         }
 
         return res.toString();
+    }
+
+    // Comparisons should only compare device properties
+    @Override
+    public boolean equals(Object obj) {
+        return (obj.getClass() == Device.class) && this.properties.equals(((Device)obj).properties);
+    }
+    @Override
+    public int hashCode(){
+        return this.properties.hashCode();
     }
 
     // Creates multiline string describing all properties of this device

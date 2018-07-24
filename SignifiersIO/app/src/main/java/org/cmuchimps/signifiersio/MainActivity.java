@@ -1,10 +1,18 @@
 package org.cmuchimps.signifiersio;
 
+import android.app.ActivityManager;
+import android.app.KeyguardManager;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.net.nsd.NsdManager;
 import android.net.nsd.NsdServiceInfo;
+import android.os.Build;
 import android.support.constraint.ConstraintLayout;
+import android.support.v4.app.NotificationCompat;
+import android.support.v4.app.NotificationManagerCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -25,23 +33,28 @@ import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 
 import java.net.InetAddress;
+import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
 
 interface DeviceUpdateListener {
-    void onDeviceUpdate();
+    void onDeviceUpdate(Set<Device> newDevices, Set<Device> oldDevices);
 }
 
 public class MainActivity extends AppCompatActivity implements DeviceUpdateListener {
     private static final int ICONS_PER_ROW = 3;   // Number of icons in each row of the UI
+    private static final String CHANNEL_ID = "org.cmuchimps.signifier.io.privacy_channel"; // id for notifications channel
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        createNotificationChannel();
 
         // Load the privacy policy
         PrivacyParser.loadPP();
@@ -50,24 +63,35 @@ public class MainActivity extends AppCompatActivity implements DeviceUpdateListe
         DeviceDetector.setOnDeviceUpdateListener(this);
     }
 
-    @Override
-    protected void onResume(){
-        super.onResume();
-
-        // Resume DeviceDetector's timer
-        DeviceDetector.resume();
+    // Specific to Android 8
+    private void createNotificationChannel() {
+        // Create the NotificationChannel, but only on API 26+ because
+        // the NotificationChannel class is new and not in the support library
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            CharSequence name = "Privacy Violations";
+            String description = "Alerts of new devices that violate your privacy.";
+            int importance = NotificationManager.IMPORTANCE_HIGH;
+            NotificationChannel channel = new NotificationChannel(CHANNEL_ID, name, importance);
+            channel.setDescription(description);
+            // Register the channel with the system; you can't change the importance
+            // or other notification behaviors after this
+            NotificationManager notificationManager = getSystemService(NotificationManager.class);
+            notificationManager.createNotificationChannel(channel);
+        }
     }
 
-    @Override
-    public void onPause() {
-        super.onPause();
+    // Called when DeviceDetector gets a change in devices
+    public void onDeviceUpdate(Set<Device> newDevices, Set<Device> oldDevices){
+        // Update the UI
+        updateIcons();
 
-        // Pause DeviceDetector's timer
-        DeviceDetector.pause();
+        // Send notifications of new devices
+        if(shouldShowNotification()) {
+            sendNotification(newDevices, oldDevices);
+        }
     }
 
-    // When devices update, rebuild all the icons
-    public void onDeviceUpdate(){
+    private void updateIcons(){
         // Get the new list of devices
         Map<DataType, Set<Device>> hierarchy = DeviceDetector.getDeviceHierarchy();
 
@@ -106,7 +130,58 @@ public class MainActivity extends AppCompatActivity implements DeviceUpdateListe
             row.addView(icon);
             tableIndex++;
         }
+    }
 
+    // Send a notification to the user if a new device violates their privacy
+    private void sendNotification(Set<Device> newDevices, Set<Device> oldDevices){
+        Set<Device> violations = new HashSet<>();
+
+        for(Device d : newDevices){
+            if(d.violation && !oldDevices.contains(d)){
+                violations.add(d);
+            }
+        }
+
+        if(violations.size() > 0) {
+            // Build a string description of the new violations
+            Iterator<Device> iterator = violations.iterator();
+            StringBuilder sb = new StringBuilder(iterator.next().toString());
+
+            while(iterator.hasNext()){
+                sb.append("; ").append(iterator.next().toString());
+            }
+
+            // Open MainActivity when notification is tapped
+            Intent intent = new Intent(this, MainActivity.class);
+            //intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+            PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, intent, 0);
+
+            NotificationCompat.Builder violationNotification = new NotificationCompat.Builder(this, CHANNEL_ID)
+                    .setSmallIcon(R.drawable.alert)
+                    .setContentTitle("Privacy Violation")
+                    .setContentText(sb.toString())
+                    .setPriority(NotificationCompat.PRIORITY_MAX)
+                    .setContentIntent(pendingIntent)
+                    .setAutoCancel(true);
+
+            NotificationManagerCompat notificationManager = NotificationManagerCompat.from(this);
+
+            // notificationId is a unique int for each notification that you must define
+            notificationManager.notify((int)((new Date()).getTime() % Integer.MAX_VALUE), violationNotification.build());
+        }
+    }
+
+    // Returns false if app is foreground
+    private boolean shouldShowNotification() {
+        ActivityManager.RunningAppProcessInfo myProcess = new ActivityManager.RunningAppProcessInfo();
+        ActivityManager.getMyMemoryState(myProcess);
+        if(myProcess.importance != ActivityManager.RunningAppProcessInfo.IMPORTANCE_FOREGROUND) {
+            return true;
+        }
+
+        KeyguardManager km = (KeyguardManager) this.getSystemService(Context.KEYGUARD_SERVICE);
+        // app is in foreground, but if screen is locked show notification anyway
+        return km.inKeyguardRestrictedInputMode();
     }
 
     @Override

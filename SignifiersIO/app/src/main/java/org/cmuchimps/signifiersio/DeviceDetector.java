@@ -3,6 +3,7 @@ package org.cmuchimps.signifiersio;
 import android.content.Context;
 import android.net.nsd.NsdManager;
 import android.net.nsd.NsdServiceInfo;
+import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 
 import com.android.volley.Request;
@@ -24,6 +25,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.logging.Logger;
 
 public class DeviceDetector {
     // Device organization
@@ -69,8 +71,8 @@ public class DeviceDetector {
         DeviceDetector.listener = listener;
     }
 
-    // Called from Activity's onResume()
-    protected static void resume(){
+    // Start the periodic timer to check for changes to devices
+    private static void startTimer(){
         refreshTimer = new Timer();
         refreshTimer.schedule(new TimerTask(){
             public void run(){
@@ -79,9 +81,7 @@ public class DeviceDetector {
         }, 0, REFRESH_TIME);
     }
 
-    // Called from Activity's onPause()
-    protected static void pause(){
-        // Stop refreshing when you pause the app
+    private static void stopTimer(){
         refreshTimer.cancel();
     }
 
@@ -102,11 +102,22 @@ public class DeviceDetector {
                     // TODO: check for validity
 
                     // Turn the JSON into a Set of Devices
-                    updateDevices(jsonDevices);
+                    Set<Device> newDevices = buildSet(jsonDevices);
 
-                    // TODO: Only do this if devices hasn't changed
-                    rebuildHierarchy();
-                    listener.onDeviceUpdate();
+                    if(!newDevices.equals(devices)) {
+                        Log.d("DD", "devices changed");
+
+                        Set<Device> oldDevices = devices;
+                        devices = newDevices;
+
+                        // Build the device hierarchy
+                        rebuildHierarchy();
+
+                        // Alert the listener that the devices have changed
+                        if(listener != null) {
+                            listener.onDeviceUpdate(newDevices, oldDevices);
+                        }
+                    }
                 } catch (JSONException e){
                     Log.e("DD invalid JSON", e.toString());
                 }
@@ -119,6 +130,7 @@ public class DeviceDetector {
         });
         requestQueue.add(request);
     }
+
 
     // Set some stock devices
     private static void setDevicesDummy(){
@@ -141,7 +153,7 @@ public class DeviceDetector {
     }
 
     // Turn a JSONArray into a Set of Devices
-    private static void updateDevices(JSONArray jsonDevices) throws JSONException {
+    private static Set<Device> buildSet(JSONArray jsonDevices) throws JSONException {
         // Initialize new set with initial capacity = # devices
         Set<Device> newDevices = new HashSet<>(jsonDevices.length());
 
@@ -150,7 +162,7 @@ public class DeviceDetector {
             newDevices.add(new Device(jsonDevices.getJSONObject(i)));
         }
 
-        devices = newDevices;
+        return newDevices;
     }
 
     // Make deviceHierarchy use the data in devices
@@ -238,11 +250,7 @@ public class DeviceDetector {
                 hubAddress = host.getHostAddress();
                 connected = true;
 
-                // Restart the timer so we access the devices immediately
-                if(refreshTimer != null){
-                    refreshTimer.cancel();
-                    resume();
-                }
+                startTimer();
 
                 Log.d(TAG, "Resolved address = " + hubAddress);
 

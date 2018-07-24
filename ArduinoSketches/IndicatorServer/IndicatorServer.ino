@@ -3,14 +3,15 @@
 #include <ESP8266WebServer.h>
 #include <ESP8266mDNS.h>
 
-const char* ssid = "CMU";
-const char* password = "whatever";
+const char* ssid = "Max's iPhone";
+const char* password = "indicatorhub";
+const char* mDNSName = "indicator1";
 
 ESP8266WebServer server(80);
 
-const int ledR = 14;
-const int ledG = 16;
-const int ledB = 13;
+const int ledR = 13;
+const int ledG = 12;
+const int ledB = 14;
 
 const char RED_MASK = 1;
 const char GREEN_MASK = 2;
@@ -70,7 +71,7 @@ void setup(void) {
   Serial.print("IP address: ");
   Serial.println(WiFi.localIP());
 
-  if (MDNS.begin("pizzaz")) {
+  if (MDNS.begin(mDNSName)) {
     Serial.println("MDNS responder started");
   }
 
