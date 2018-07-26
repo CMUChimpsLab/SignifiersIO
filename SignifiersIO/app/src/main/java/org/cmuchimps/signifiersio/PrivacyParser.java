@@ -31,6 +31,10 @@ public class PrivacyParser {
             "{" +
             "'rule_type': 'allow'," +
             "'purpose': 'communication'" +
+            "}," +
+            "{" +
+            "'rule_type': 'allow'," +
+            "'purpose': 'security'" +
             "}" +
             "]" +
             "}" +

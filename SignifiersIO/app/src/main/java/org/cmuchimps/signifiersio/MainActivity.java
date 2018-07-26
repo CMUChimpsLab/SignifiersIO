@@ -145,10 +145,10 @@ public class MainActivity extends AppCompatActivity implements DeviceUpdateListe
         if(violations.size() > 0) {
             // Build a string description of the new violations
             Iterator<Device> iterator = violations.iterator();
-            StringBuilder sb = new StringBuilder(iterator.next().toString());
+            StringBuilder sb = new StringBuilder(iterator.next().toNotificationString());
 
             while(iterator.hasNext()){
-                sb.append("; ").append(iterator.next().toString());
+                sb.append("; ").append(iterator.next().toNotificationString());
             }
 
             // Open MainActivity when notification is tapped

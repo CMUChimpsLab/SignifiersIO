@@ -1,5 +1,6 @@
 package org.cmuchimps.signifiersio;
 
+import android.text.TextUtils;
 import android.util.Log;
 
 import org.json.JSONException;
@@ -59,13 +60,38 @@ public class Device {
     public String toString(){
         StringBuilder res = new StringBuilder();
         boolean first = true;
-        String[] props = {"device_name","data_type","purpose"};
+        String[] props = {"device_name","purpose"};
 
         for(String property : props){
             if(this.hasProperty(property)) {
                 res.append(first ? "" : ", ").append(this.getProperty(property));
+                first = false;
             }
-            first = false;
+        }
+
+        return res.toString();
+    }
+
+    public String toNotificationString(){
+        StringBuilder res = new StringBuilder();
+
+        if(this.hasProperty("device_name")){
+            res.append(this.getProperty("device_name"));
+        } else if(this.hasProperty("company")){
+            res.append(this.getProperty("company"));
+        } else {
+            res.append("A device");
+        }
+        res.append(" is recording ");
+
+        if(this.hasProperty("data_type")){
+            res.append(this.getProperty("data_type"));
+        } else {
+            res.append("something");
+        }
+
+        if(this.hasProperty("purpose")) {
+            res.append(" for ").append(this.getProperty("purpose"));
         }
 
         return res.toString();
@@ -82,20 +108,29 @@ public class Device {
     }
 
     // Creates multiline string describing all properties of this device
-    // TODO: sort, make keys friendly (ie not "data_type")
+    // TODO: sort
     public String propsToString(){
         StringBuilder res = new StringBuilder();
         boolean first = true;
 
         for(String key : this.properties.keySet()){
             res.append(first ? "" : "\n")
-                    .append(key).append(": ")
+                    .append(keyClean(key)).append(": ")
                     .append(this.getProperty(key));
 
             first = false;
         }
 
         return res.toString();
+    }
+
+    private static String keyClean(String key){
+        // Turn '_' into ' '
+        String res = TextUtils.join(" ", key.split("_"));
+
+        // Make the first letter capitalized
+        String first = res.substring(0,1);
+        return res.replaceFirst(first, first.toUpperCase());
     }
 
     public static DataType stringToDataType(String s){
