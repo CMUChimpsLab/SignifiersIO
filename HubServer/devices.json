@@ -1,28 +1,51 @@
 [
 {
-    "company":"Google",
-    "device_name":"Google Home",
+    "company":"Amazon",
+    "device_name":"Amazon Echo Plus",
     "data_type":"audio",
-    "purpose":"advertising",
-    "device_id":"id0"
+    "purpose":"commerce",
+    "device_id":"CH1MP5-L48-0",
+    "data_destination":"alexa.amazon.com",
+    "status":"passive"
 },
-{
-    "company":"Apple",
-    "data_type":"location",
-    "purpose":"security",
-    "device_id":"id1"
-},
+
 {
     "company":"Phishing4Less",
+    "device_name":"PhishCam",
     "data_type":"video",
     "purpose":"advertising",
-    "device_id":"id2"
+    "device_id":"CH1MP5-L48-1",
+    "data_destination":"doubleclick.net",
+    "status":"active"
 },
+
 {
-    "company":"Facebook",
-    "device_name":"Facecam",
+    "company":"Philips",
+    "device_name":"Philips Hue Motion Sensor",
+    "data_type":"activity",
+    "purpose":"lighting",
+    "device_id":"CH1MP5-L48-2",
+    "data_destination":"hue.philips.com",
+    "status":"active"
+},
+
+{
+    "company":"Nest",
+    "device_name":"Nest Hello Video Doorbell",
+    "data_type":"video",
+    "purpose":"security",
+    "device_id":"CH1MP5-L48-3",
+    "data_destination":"hello.nest.com",
+    "status":"passive"
+},
+
+{
+    "company":"Samsung",
+    "device_name":"Samsung Smart TV",
     "data_type":"video",
     "purpose":"communication",
-    "device_id":"id3"
+    "device_id":"CH1MP5-L48-4",
+    "data_destination":"skype.com",
+    "status":"off"
 }
 ]

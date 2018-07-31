@@ -3,7 +3,32 @@ from  http.server import HTTPServer, BaseHTTPRequestHandler
 
 class HubRequestHandler(BaseHTTPRequestHandler):
     color0 = 2
-    addrs = {"id0":"128.237.238.37"}
+    addrs = {"CH1MP5-L48-0":"signifier3.wv.cc.cmu.edu",
+             "CH1MP5-L48-1":"signifier4.wv.cc.cmu.edu",
+             "CH1MP5-L48-2":"signifier1.wv.cc.cmu.edu",
+             "CH1MP5-L48-3":"signifier5.wv.cc.cmu.edu",
+             "CH1MP5-L48-4":"signifier2.wv.cc.cmu.edu"}
+
+    # Send a request to the indicator for device_id to light up color
+    def light(device_id, color):
+        if device_id not in HubRequestHandler.addrs:
+            print(device_id + " is not a recognized device id, ignoring it")
+            return
+
+        # Get addr from database
+        addr = HubRequestHandler.addrs[device_id]
+
+        # Send the color request
+        try:
+            response = requests.get("http://" + addr + "/" + str(color))
+
+            # The response should be NO CONTENT (204)
+            if(response.status_code != 204):
+                print("Invalid status code: " + response)
+
+        except requests.exceptions.ConnectionError:
+            print("Couldn't connect to " + device_id + ", ignoring it")
+
 
     def do_GET(self):
         if(self.path == ("/devices.json")):
@@ -57,30 +82,17 @@ class HubRequestHandler(BaseHTTPRequestHandler):
         ids = urllib.parse.parse_qs(self.rfile.read(content_length),
                                     keep_blank_values = True)
 
-        # If any devid isn't in addrs, send back a 404
-        for devid in ids:
-            if devid.decode() not in HubRequestHandler.addrs:
-                print("Couldn't find device id ", devid)
-                self.send_error(404)
-                return
 
         # For each id, send a request to the relevant indicator.
         # We just use a GET request with the color we want to use
         for devid in ids:
-
             # Get color to request
             color = int(ids[devid][0])
             if(color == 0):
                 color = HubRequestHandler.color0
 
-            # Get addr from database
-            addr = HubRequestHandler.addrs[devid.decode()]
-            response = requests.get("http://" + addr + "/" + str(color))
-
-            # If response isn't NO CONTENT (204) then we have a problem
-            if(response.status_code != 204):
-                print(response)
-                raise IOError
+            # Light up the indicator
+            HubRequestHandler.light(devid.decode(), color)
 
         # TODO: thread the requests to the indicators for speeeeed
 
@@ -95,15 +107,9 @@ class HubRequestHandler(BaseHTTPRequestHandler):
         # TODO: look at threading this
         time.sleep(5)
 
-        # For each id, GET 0 (no color)
+        # For each id we just requested, turn the LED off (0 = no colors)
         for devid in ids:
-            addr = HubRequestHandler.addrs[devid.decode()]
-            response = requests.get("http://" + addr + "/0")
-
-            # If response isn't NO CONTENT (204) then we have a problem
-            if(response.status_code != 204):
-                print(response)
-                raise IOError
+            HubRequestHandler.light(devid.decode(), 0)
 
         # Change color0
         # Pick a color in [2,6] (i.e. not red or "white")
