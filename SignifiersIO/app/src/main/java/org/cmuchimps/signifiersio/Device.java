@@ -1,11 +1,17 @@
 package org.cmuchimps.signifiersio;
 
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.drawable.Drawable;
+import android.os.AsyncTask;
 import android.text.TextUtils;
 import android.util.Log;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.InputStream;
+import java.net.URL;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -24,6 +30,7 @@ public class Device {
     public DataType dataType;
     public Map<String, String> properties;
     public final boolean violation; // Whether this device violates the user's privacy policy
+    public Bitmap deviceImage;
 
     public Device(JSONObject o) throws JSONException{
         properties = new HashMap<>();
@@ -47,14 +54,60 @@ public class Device {
         }
 
         this.violation = !PrivacyParser.allows(this);
+
+        // Download the image, if it is specified
+        if(this.hasProperty("device_image")){
+            new DownloadImage().execute(this.getProperty("device_image"));
+        } else {
+            this.deviceImage = null;
+        }
     }
 
-    public boolean hasProperty(String k){
-        return this.properties.containsKey(k);
+    // AsyncTask to download an image in the background
+    private class DownloadImage extends AsyncTask<String, Void, Bitmap> {
+
+//        @Override
+////        protected void onPreExecute() {
+////            super.onPreExecute();
+////            // Create a progressdialog
+////            mProgressDialog = new ProgressDialog(MainActivity.this);
+////            // Set progressdialog title
+////            mProgressDialog.setTitle("Download Image Tutorial");
+////            // Set progressdialog message
+////            mProgressDialog.setMessage("Loading...");
+////            mProgressDialog.setIndeterminate(false);
+////            // Show progressdialog
+////            mProgressDialog.show();
+////        }
+
+        @Override
+        protected Bitmap doInBackground(String... URL) {
+
+            String imageURL = URL[0];
+
+            Bitmap bitmap = null;
+            try {
+                // Download Image from URL
+                InputStream input = new java.net.URL(imageURL).openStream();
+                // Decode Bitmap
+                bitmap = BitmapFactory.decodeStream(input);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            return bitmap;
+        }
+
+        @Override
+        protected void onPostExecute(Bitmap result) {
+            // Set the bitmap into ImageView
+            deviceImage = result;
+            // Close progressdialog
+            //mProgressDialog.dismiss();
+        }
     }
-    public String getProperty(String k){
-        return this.properties.get(k);
-    }
+
+    public boolean hasProperty(String k){ return this.properties.containsKey(k); }
+    public String getProperty(String k){ return this.properties.get(k); }
 
     // Creates short, one-line description of device
     public String toString(){
@@ -99,13 +152,9 @@ public class Device {
 
     // Comparisons should only compare device properties
     @Override
-    public boolean equals(Object obj) {
-        return (obj.getClass() == Device.class) && this.properties.equals(((Device)obj).properties);
-    }
+    public boolean equals(Object obj) { return (obj.getClass() == Device.class) && this.properties.equals(((Device)obj).properties); }
     @Override
-    public int hashCode(){
-        return this.properties.hashCode();
-    }
+    public int hashCode(){ return this.properties.hashCode(); }
 
     // Creates multiline string describing all properties of this device
     // TODO: sort
@@ -114,6 +163,8 @@ public class Device {
         boolean first = true;
 
         for(String key : this.properties.keySet()){
+            // Don't render the device image url because it's long and not helpful
+            if(key.equalsIgnoreCase("device_image")){ continue; }
             res.append(first ? "" : "\n")
                     .append(keyClean(key)).append(": ")
                     .append(this.getProperty(key));

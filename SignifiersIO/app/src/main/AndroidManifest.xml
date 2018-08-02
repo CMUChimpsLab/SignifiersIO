@@ -11,25 +11,28 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name=".MainActivity">
+        <activity android:name=".MainActivity"
+            android:screenOrientation="portrait">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
         <activity
             android:name=".RootPolicyActivity"
             android:label="@string/title_activity_root_policy"
-            android:parentActivityName=".MainActivity">
+            android:parentActivityName=".MainActivity"
+            android:screenOrientation="portrait">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="org.cmuchimps.signifiersio.MainActivity" />
         </activity>
         <activity
             android:name=".ChildPolicyActivity"
-            android:label="@string/title_activity_child_policy"></activity>
-        <activity android:name=".IndicatorFilter"></activity>
+            android:label="@string/title_activity_child_policy"
+            android:screenOrientation="portrait"/>
+        <activity android:name=".IndicatorFilter"
+            android:screenOrientation="portrait"/>
     </application>
 
 </manifest>

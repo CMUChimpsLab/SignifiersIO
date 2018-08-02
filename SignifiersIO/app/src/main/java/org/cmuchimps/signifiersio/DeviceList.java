@@ -1,6 +1,9 @@
 package org.cmuchimps.signifiersio;
 
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.drawable.Drawable;
 import android.support.constraint.ConstraintLayout;
 import android.support.constraint.Guideline;
 import android.view.Gravity;
@@ -14,6 +17,10 @@ import android.widget.LinearLayout;
 import android.widget.PopupWindow;
 import android.widget.TextView;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -90,7 +97,15 @@ public class DeviceList implements View.OnClickListener{
                 public void onClick(View view) {
                     // When device string is clicked, show full device properties
                     ((TextView)pageScroll.findViewById(R.id.device_details)).setText(d.propsToString());
-                    // TODO: set device icon
+
+                    // Set the image for the device
+                    ImageView deviceImageView = pageScroll.findViewById(R.id.device_img);
+                    if(d.deviceImage != null){
+                        deviceImageView.setImageBitmap(d.deviceImage);
+                    } else {
+                        // If the device doesn't specify a URL, just use the datatype image
+                        deviceImageView.setImageResource(Device.DataTypeToIcon(d.dataType));
+                    }
 
                     // If the device violates our policy, show yet another alert
                     if(d.violation) {
@@ -129,6 +144,5 @@ public class DeviceList implements View.OnClickListener{
 
         popupWindow.showAtLocation(this.parentView, Gravity.CENTER, 0, 0);
     }
-
 
 }
