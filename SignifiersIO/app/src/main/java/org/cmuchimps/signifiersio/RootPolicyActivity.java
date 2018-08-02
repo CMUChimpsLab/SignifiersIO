@@ -22,8 +22,6 @@ public class RootPolicyActivity extends PolicyActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        // Initialize global variables
-        exceptions = new ArrayList<>();
         sharedPreferences = getPreferences(Context.MODE_PRIVATE);
 
         try{
@@ -37,8 +35,10 @@ public class RootPolicyActivity extends PolicyActivity {
             if (privacyPolicy.has("except")) {
                 JSONArray es = privacyPolicy.getJSONArray("except");
 
+                // Create a new view from each exception and add it to the list
                 for (int i = 0; i < es.length(); i++) {
-                    exceptions.add(es.getJSONObject(i));
+                    // TODO: make the order stable
+                    addException(es.getJSONObject(i));
                 }
             }
 
@@ -66,12 +66,6 @@ public class RootPolicyActivity extends PolicyActivity {
                 updatePP();           // Save privacy policy
             }
         });
-
-        // Create a new view from each exception and add it to the list
-        for(int i = 0; i < exceptions.size(); i++){
-            // TODO: make the order stable
-            addException(exceptions.get(i), i);
-        }
     }
 
     // Called when the new exception activity finishes
@@ -81,7 +75,7 @@ public class RootPolicyActivity extends PolicyActivity {
         super.onActivityResult(requestCode, resultCode, data);
 
         // If the NewException activity returned a new exception, save the policy
-        if (requestCode == NEW_EXCEPTION_REQUEST && resultCode == RESULT_OK){
+        if (resultCode == RESULT_OK){
             updatePP();
         }
     }
@@ -92,7 +86,13 @@ public class RootPolicyActivity extends PolicyActivity {
             // Create the privacy policy JSON
             JSONObject newPrivacyPolicy = new JSONObject();
             newPrivacyPolicy.put("rule_type", rootAllow ? "allow" : "disallow");
-            newPrivacyPolicy.put("except",new JSONArray(exceptions));
+
+            // Build a JSONArray of exceptions from the LinearLayout of exceptions
+            JSONArray exceptions = new JSONArray();
+            for(int i = 0; i < exceptionList.getChildCount(); i++){
+                exceptions.put(((PolicyException)exceptionList.getChildAt(i)).getExceptionJSON());
+            }
+            newPrivacyPolicy.put("except",exceptions);
 
             // Save it to SharedPreferences
             SharedPreferences.Editor sharedPreferencesEditor = sharedPreferences.edit();

@@ -24,7 +24,10 @@ public abstract class PolicyActivity extends AppCompatActivity {
     protected static final int NEW_EXCEPTION_REQUEST = 1;  // Request code for a new exception
     protected static final int EDIT_EXCEPTION_OFFSET = 10; // Offset from index for editing an exception
 
-    protected ArrayList<JSONObject> exceptions;
+    protected static final String EXCEPTION_JSON = "org.cmuchimps.signifiersio.exception_json";
+    protected static final String DELETED_KEY = "org.cmuchimps.signifiersio.deleted_key";
+
+    // Stores all the exceptions to this rule, which includes displaying them
     LinearLayout exceptionList;
 
     @Override
@@ -60,46 +63,56 @@ public abstract class PolicyActivity extends AppCompatActivity {
                     String exceptionJSON = data.getStringExtra(getString(R.string.exception_json));
                     JSONObject exception = new JSONObject(exceptionJSON);
 
-                    // Add the new exception to our list
-                    int index = exceptions.size();
-                    exceptions.add(exception);
-
-                    // Create a View to display and allow editing of the exception
-                    addException(exception, index);
+                    // Create a View to display and allow editing of the exception,
+                    // and add the new exception to our list
+                    addException(exception);
 
                 } catch (JSONException e) {
                     Log.d("onActivityResult", e.toString());
                 }
 
             } else if(0 <= requestCode - EDIT_EXCEPTION_OFFSET &&
-                    requestCode - EDIT_EXCEPTION_OFFSET < exceptions.size()){
-                // If the ChildPolicyActivity returned an edited exception
-                try {
-                    String exceptionJSON = data.getStringExtra(getString(R.string.exception_json));
-                    JSONObject exception = new JSONObject(exceptionJSON);
+                    requestCode - EDIT_EXCEPTION_OFFSET < exceptionList.getChildCount()){
+                // We were editing an exception
+                int index = requestCode - EDIT_EXCEPTION_OFFSET;
 
-                    // Add the new exception to our list
-                    int index = exceptions.size();
-                    exceptions.add(exception);
+                if(data.hasExtra(DELETED_KEY) && data.getBooleanExtra(DELETED_KEY, false)){
+                    // If we deleted the exception we were editing
 
-                } catch (JSONException e) {
-                    Log.d("onActivityResult", e.toString());
+                    exceptionList.removeViewAt(index);
+
+                    // Update all the indices so we delete and edit the right ones
+                    for(int i = 0; i < exceptionList.getChildCount(); i++){
+                        ((PolicyException)exceptionList.getChildAt(i)).setIndex(i);
+                    }
+                } else {
+                    // If the ChildPolicyActivity returned an edited exception
+                    try {
+                        String exceptionJSON = data.getStringExtra(getString(R.string.exception_json));
+                        JSONObject exception = new JSONObject(exceptionJSON);
+
+                        ((PolicyException)exceptionList.getChildAt(index)).setExceptionJSON(exception);
+
+                    } catch (JSONException e) {
+                        Log.d("onActivityResult", e.toString());
+                    }
                 }
             }
         }
     }
 
-    // Add exception (in JSON format) to our list of exceptions and create a view for it
-    protected void addException(JSONObject exception, int index){
-        PolicyException p = new PolicyException(this);
-        p.setText(summarizeException(exception));
-        p.setIndex(index);
+    // Create a view for exception (in JSON format) and add it to our LinearLayout of exceptions
+    protected void addException(final JSONObject exception){
+        PolicyException p = new PolicyException(this, exception, exceptionList.getChildCount());
 
         p.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                // TODO: use index to edit this exception
-                //((PolicyException)view).getIndex();
+                // Start activity to edit an exception
+                Intent intent = new Intent(PolicyActivity.this, ChildPolicyActivity.class);
+                intent.putExtra(EXCEPTION_JSON, exception.toString());
+
+                startActivityForResult(intent, EDIT_EXCEPTION_OFFSET + ((PolicyException)view).getIndex());
             }
         });
 
@@ -107,35 +120,12 @@ public abstract class PolicyActivity extends AppCompatActivity {
         exceptionList.addView(p);
     }
 
-    // Create a short and meaningful description of the exception
-    protected String summarizeException(JSONObject exception) {
-        try {
-            StringBuilder res = new StringBuilder();
-            Iterator<String> keys = exception.keys();
-            boolean first = true;
-
-            // Concatenate all properties of the exception
-            while(keys.hasNext()){
-                String property = keys.next();
-                // TODO: skip any special keys you add
-
-                res.append(first ? "" : ", ");
-                if(property.equals("except")){
-                    // The except property is a list, so just ellipsize it.
-                    res.append("except...");
-                } else {
-                    res.append(exception.getString(property));
-                }
-
-                first = false;
-            }
-
-            return res.toString();
-
-        } catch(JSONException e){
-            Log.e("summarizeException",e.toString());
-            return "JSON Error";
-        }
+    // Delete this exception. Called when the delete button is tapped
+    public void deleteThis(View view){
+        Intent intent = new Intent();
+        intent.putExtra(DELETED_KEY, true);
+        setResult(RESULT_OK, intent);
+        finish();
     }
 
     // Create a Save button

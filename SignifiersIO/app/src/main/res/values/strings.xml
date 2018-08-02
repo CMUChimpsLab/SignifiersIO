@@ -8,6 +8,7 @@
     <string name="root_disallow_string">Disallow all except...</string>
     <string name="add_exception_string">New Exception</string>
     <string name="exceptions_label">Exceptions</string>
+    <string name="delete_button_string">Delete</string>
     <string name="unfiltered_hint">Any</string>
     <string name="only_violations_string">Only show devices that violate my privacy preferences</string>
     <string name="show_button_string">Show</string>
