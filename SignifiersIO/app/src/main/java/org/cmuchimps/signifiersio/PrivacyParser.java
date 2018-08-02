@@ -1,5 +1,10 @@
 package org.cmuchimps.signifiersio;
 
+import android.app.Activity;
+import android.content.Context;
+import android.content.SharedPreferences;
+import android.preference.Preference;
+import android.preference.PreferenceManager;
 import android.util.Log;
 
 import org.json.JSONArray;
@@ -41,15 +46,17 @@ public class PrivacyParser {
             "]" +
             "}";
 
-    // TODO: loads privacy preferences from <unclear>
-    public static void loadPP() {
+    // Loads privacy preferences from shared preferences
+    public static void loadPP(Context context) {
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
+
         try{
-            policy = new JSONObject(ex_pp);
+            policy = new JSONObject(sharedPreferences.getString(context.getResources().getString(R.string.privacy_policy), "{'rule_type':'allow'}"));
         } catch(JSONException e){
             Log.e("Error loading PP", e.toString());
         }
 
-        assert(isValid(policy));
+        //assert(isValid(policy));
     }
 
     // Return the opposite rule_type

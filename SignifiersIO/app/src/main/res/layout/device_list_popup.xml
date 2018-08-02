@@ -106,7 +106,7 @@
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toEndOf="@id/page_break"
                 app:layout_constraintTop_toTopOf="parent"
-                app:srcCompat="@drawable/example_device" />
+                app:srcCompat="@drawable/camera" />
             <ImageView
                 android:id="@+id/alert"
                 android:layout_width="50dp"

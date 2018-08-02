@@ -28,8 +28,8 @@ enum DataType {
 
 public class Device {
     public DataType dataType;
-    public Map<String, String> properties;
-    public final boolean violation; // Whether this device violates the user's privacy policy
+    private Map<String, String> properties;
+    public boolean violation; // Whether this device violates the user's privacy policy
     public Bitmap deviceImage;
 
     public Device(JSONObject o) throws JSONException{
@@ -53,7 +53,7 @@ public class Device {
             throw new JSONException("Device JSON has no data_type property");
         }
 
-        this.violation = !PrivacyParser.allows(this);
+        this.updateViolation();
 
         // Download the image, if it is specified
         if(this.hasProperty("device_image")){
@@ -65,20 +65,6 @@ public class Device {
 
     // AsyncTask to download an image in the background
     private class DownloadImage extends AsyncTask<String, Void, Bitmap> {
-
-//        @Override
-////        protected void onPreExecute() {
-////            super.onPreExecute();
-////            // Create a progressdialog
-////            mProgressDialog = new ProgressDialog(MainActivity.this);
-////            // Set progressdialog title
-////            mProgressDialog.setTitle("Download Image Tutorial");
-////            // Set progressdialog message
-////            mProgressDialog.setMessage("Loading...");
-////            mProgressDialog.setIndeterminate(false);
-////            // Show progressdialog
-////            mProgressDialog.show();
-////        }
 
         @Override
         protected Bitmap doInBackground(String... URL) {
@@ -99,15 +85,16 @@ public class Device {
 
         @Override
         protected void onPostExecute(Bitmap result) {
-            // Set the bitmap into ImageView
+            // Set the host Device's image with the bitmap we download
             deviceImage = result;
-            // Close progressdialog
-            //mProgressDialog.dismiss();
         }
     }
 
     public boolean hasProperty(String k){ return this.properties.containsKey(k); }
     public String getProperty(String k){ return this.properties.get(k); }
+
+    // Set violation to reflect whether this device violates the privacy policy
+    public void updateViolation(){ this.violation = !PrivacyParser.allows(this); }
 
     // Creates short, one-line description of device
     public String toString(){

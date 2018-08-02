@@ -57,7 +57,7 @@ public class MainActivity extends AppCompatActivity implements DeviceUpdateListe
         createNotificationChannel();
 
         // Load the privacy policy
-        PrivacyParser.loadPP();
+        PrivacyParser.loadPP(this);
 
         DeviceDetector.startDiscovery(this);
         DeviceDetector.setOnDeviceUpdateListener(this);

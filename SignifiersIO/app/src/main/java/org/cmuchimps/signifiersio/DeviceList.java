@@ -24,8 +24,6 @@ import java.net.URL;
 import java.util.HashSet;
 import java.util.Set;
 
-//import static android.content.Context.LAYOUT_INFLATER_SERVICE;
-
 public class DeviceList implements View.OnClickListener{
     private final View parentView; // Context is used to inflate the xml file for the device list
     private final DataType dataType;

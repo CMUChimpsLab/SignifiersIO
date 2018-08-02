@@ -51,7 +51,7 @@ public class DeviceDetector {
     private static final int REFRESH_TIME = 10000;
 
     // Other
-    private static DeviceUpdateListener listener; // We call listener's onDeviceUpdate when the devices change
+    public static DeviceUpdateListener listener; // We call listener's onDeviceUpdate when the devices change
 
     public static void startDiscovery(Context context){
         requestQueue = Volley.newRequestQueue(context);

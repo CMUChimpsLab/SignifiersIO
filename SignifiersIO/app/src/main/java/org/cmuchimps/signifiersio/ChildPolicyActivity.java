@@ -52,7 +52,6 @@ public class ChildPolicyActivity extends PolicyActivity {
                     JSONArray exs = exceptionJSON.getJSONArray("except");
 
                     for(int i = 0; i < exs.length(); i++){
-                        // TODO: make the order stable
                         addException(exs.getJSONObject(i));
                     }
                 }
@@ -91,7 +90,13 @@ public class ChildPolicyActivity extends PolicyActivity {
             String status = ((EditText)findViewById(R.id.status_edit)).getText().toString();
             if(!status.equals("")) { exception.put("status", status); }
 
-            // TODO: add exceptions
+            // Build a JSONArray of exceptions from the LinearLayout of exceptions
+            JSONArray exceptions = new JSONArray();
+            for(int i = 0; i < exceptionList.getChildCount(); i++){
+                exceptions.put(((PolicyException)exceptionList.getChildAt(i)).getExceptionJSON());
+            }
+            if(exceptions.length() > 0){ exception.put("except", exceptions); }
+
         } catch(JSONException e){
             Log.e("NewException", e.toString());
         }

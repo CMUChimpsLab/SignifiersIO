@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.View;
 import android.widget.RadioGroup;
@@ -13,6 +14,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.Set;
 
 public class RootPolicyActivity extends PolicyActivity {
     private boolean rootAllow;
@@ -22,7 +24,7 @@ public class RootPolicyActivity extends PolicyActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        sharedPreferences = getPreferences(Context.MODE_PRIVATE);
+        sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
 
         try{
             // Load stored privacy policy from Shared Preferences
@@ -99,7 +101,19 @@ public class RootPolicyActivity extends PolicyActivity {
             sharedPreferencesEditor.putString(getString(R.string.privacy_policy), newPrivacyPolicy.toString());
             sharedPreferencesEditor.apply();
 
-            // TODO: propagate the new privacy policy
+            // Propagate the new privacy policy:
+            // PrivacyParser needs the new policy
+            PrivacyParser.loadPP(this);
+            // All the devices need to be reevaluated by PrivacyParser
+            Set<Device> devices = DeviceDetector.getDevices();
+            for(Device d : devices){
+                d.updateViolation();
+            }
+            // MainActivity needs to rebuild the view to show correct alerts
+            DeviceDetector.listener.onDeviceUpdate(devices, devices);
+            // (okay that's a slightly hacky way to do this, but it does have the virtue of
+            // not holding an extra reference to our MainActivity)
+
         } catch(JSONException e){
             Log.e("updatePP",e.toString());
             // TODO: make a toast to let user know it didn't save, even though this should never happen
