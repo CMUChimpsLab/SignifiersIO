@@ -45,6 +45,11 @@ To put it in run mode, connect IO0 to 3.3V **INSTEAD OF** 0V and reset.
 
 After uploading a sketch, the ESP8266 will automatically reboot into run mode. To upload a new sketch, reset it.
 
+I connected each device to the CMU network using http://netreg.net.cmu.edu.
+There is an Arduino Wifi library command to get the MAC address of the ESP8266, which is all you need to register it with the CMU network.
+I have unregistered all the indicators, so you will have to reregister them.
+
 Resources:
 * https://tttapa.github.io/ESP8266/Chap01%20-%20ESP8266.html
 * https://github.com/esp8266/Arduino/tree/master/doc
+* ESP8266 source: https://www.gearbest.com/transmitters-receivers-module/pp_227651.html?wid=1433363
